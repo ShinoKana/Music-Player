@@ -25,7 +25,7 @@ class ConfigManager(QConfig):
     themeModeConfig = OptionsConfigItem("System", "ThemeMode", "Light", OptionsValidator(["Light", "Dark", "Auto"]), restart=True)
     componentLightColorConfig = ColorConfigItem("System", "ComponentLightColor", QColor(119, 176, 253), restart=True)
     componentDarkColorConfig = ColorConfigItem("System", "ComponentDarkColor", QColor(39, 58, 83), restart=True)
-    languageConfig = OptionsConfigItem("System", "Language", "en", OptionsValidator(["en",'zh-cn','zh-tw']))
+    languageConfig = OptionsConfigItem("System", "Language", "en", OptionsValidator(["en"]))
     startOnBootConfig = ConfigItem("System", "StartOnBoot", False, BoolValidator())
     minimizeToTrayConfig = ConfigItem("System", "MinimizeToTray", True, BoolValidator())
 
