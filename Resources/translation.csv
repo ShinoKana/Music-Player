@@ -4,17 +4,6 @@ en,English,English,English
 zh-cn,简体中文,简体中文,简体中文
 zh-tw,繁體中文,繁體中文,繁體中文
 settings,Settings,设置,設置
-document,Document,文档,文件
-wrong grammar detection,Wrong grammar detection,错误语法检测,錯誤語法檢測
-check grammar in documents during editing,Check grammar in documents during editing,编辑文档时检测语法,編輯文件時檢測語法
-wrong grammar color,Wrong grammar color,错误语法颜色,錯誤語法顏色
-wrong info detection,Wrong info detection,错误资料检测,錯誤資料檢測
-check info in documents during editing,Check info in documents during editing,编辑文档时检测输入的资料是否有错,編輯文件時檢測輸入的資料是否有錯
-wrong info color,Wrong info color,错误资料颜色,錯誤資料顏色
-edit auto tag,Edit Auto Generate Tags,编辑自动生成标签,編輯自動生成標籤
-personal data,Personal data,个人资料,個人資料
-edit tags for auto detection. keywords in documents will be check whether it has any relation to the tags below or not. if yes\, recommended tags will be generated for you.,Edit tags for auto detection. Keywords in documents will be check whether it has any relation to the tags below or not. If yes\, recommended tags will be generated for you.,编辑自动生成标签。会检测内文是否与下列标签关联，从而自动生成推荐标签。,編輯自動生成標籤。會檢測內文是否與下列標籤關聯，從而自動生成推薦標籤。
-edit lawyer info,Edit Lawyer Info,编辑律师资料,編輯律師資料
 system,System,系统,系統
 theme,Theme,主题,主題
 app color theme,App color theme,主题颜色,主題顏色
@@ -22,27 +11,10 @@ language,Language,语言,語言
 app language,App language,软件语言,軟件語言
 start on boot,Start on boot,开机启动,開機啟動
 start app on boot,Start app on boot,开机启动软件,開機啟動軟件
-auto update,Auto update,自动更新,自動更新
-auto update app,Auto update app,自动更新软件,自動更新軟件
-edit,Edit,编辑,編輯
 minimize to tray,Minimize to tray,最小化到托盘,最小化到托盤
 minimize app to tray when pressing exit button,Minimize app to tray when pressing exit button,按退出按钮时最小化到托盘,按退出按鈕時最小化到托盤
-version,Version,版本,版本
-check update,Check update,检查更新,檢查更新
-seek for support,Seek for support,寻求技术协助,尋求技術協助
-help,Help,帮助,幫助
-send a message for specifying your problem to us,Send a message for specifying your problem to us,发送消息给我们，以便指定你的问题,發送消息給我們，以便指定你的問題
-provide feedback,Provide feedback,提供反馈,提供反饋
 configuration updated successfully,Configuration updated successfully,配置更新成功,配置更新成功
 configuration takes effect after restart,Configuration takes effect after restart,配置将在重启后生效,配置將在重啟後生效
-help us improve this app by providing feedback,Help us improve this app by providing feedback,提供反馈以帮助我们改进此软件,提供反饋以幫助我們改進此軟件
-set the color of wrong grammar,Highlight color of wrong grammar,错误语法的高亮颜色,錯誤語法的高亮顏色
-set the color of wrong info,Highlight color of wrong info,错误资料的高亮颜色,錯誤資料的高亮顏色
-others,Others,其他,其他
-current version,Current version,当前版本,當前版本
-copyright,Copyright,版权所有,版權所有
-companyname,legal expression,legal expression,legal expression
-all rights reserved,All rights reserved,版权所有,版權所有
 on,On,开,開
 off,Off,关,關
 ok,OK,确定,確定
@@ -52,9 +24,6 @@ old color,Current color,当前颜色,當前顏色
 done,Done,完成,完成
 choose folder,Choose folder,选择文件夹,選擇文件夾
 home,Home,主页,主頁
-search,Search,搜索,搜索
-database,Database,数据库,數據庫
-member,Member,成员,成員
 setting,Setting,设置,設置
 drop your file here!,Drop your file here!,将文件拖到此处,將文件拖到此處
 component (light mode) color,UI Component (light mode) color,UI组件（浅色模式）颜色,UI組件（淺色模式）顏色
@@ -62,25 +31,25 @@ set the color of component when app is in light mode,Set the color of component 
 component (dark mode) color,UI Component (dark mode) color,UI组件（深色模式）颜色,UI組件（深色模式）顏色
 set the color of component bar when app is in dark mode,Set the color of component bar when app is in dark mode,设置当软件处于深色模式时的UI组件颜色,設置當軟件處於深色模式時的UI組件顏色
 drop files here to upload\, or click to select.,Drop files here to upload\, or click to select.,将文件拖到此处上传\, 或点击选择,將文件拖到此處上傳\, 或點擊選擇
-search document,Search document,搜索文档,搜索文檔
-file name,File Name,文件名,文件名
-dd/mm/yyyy,dd/mm/yyyy,日/月/年,日/月/年
-tag,Tag,标签,標籤
 select one or more files to open,Select one or more files to open,选择一个或多个文件以打开,選擇一個或多個文件以打開
 file,File,文件,文件
 upload list,Upload List,上传列表,上傳列表
 upload,Upload,上传,上傳
 delete,Delete,删除,刪除
-text,TXT,文本,文本
 pdf,PDF,PDF,PDF
-image,Image,图片,圖片
 video,Video,视频,視頻
 audio,Audio,音频,音頻
 other,Other,其他,其他
-search document,Search Document,搜索文档,搜索文檔
-filename,File Name,文件名,文件名
-uploaddate,Upload Date,上传日期,上傳日期
 light,Light,浅色,淺色
 dark,Dark,深色,深色
 use system setting,Use system setting,使用系统设置,使用系統設置
-add or edit lawyers' info for fast document edit,Add or edit lawyers' info for fast document edit,添加或编辑律师信息以便快速编辑文档,添加或編輯律師信息以便快速編輯文檔
+groupinfo,Group Info,组员信息,組員信息
+play,Play,播放,播放
+song list,Song List,歌曲列表,歌曲列表
+loading...,Loading...,加载中...,加載中...
+(22-23cuhk) csci3280 group project - music player,(22-23cuhk) csci3280 group project - music player,(22-23cuhk) csci3280 group project - music player,(22-23cuhk) csci3280 group project - music player
+player,Player,播放器,播放器
+songlist,Songlist,歌曲列表,歌曲列表
+doc,Doc,文档,文檔
+txt,Txt,文本,文本
+img,Img,图片,圖片

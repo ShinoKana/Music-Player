@@ -10,10 +10,7 @@ from ExternalPackage import dpi_manager
 from PySide2.QtCore import Qt
 from PySide2.QtWidgets import QApplication
 
-
 if __name__ == '__main__':
-
-    print(sys.path)
 
     # enable high dpi scale
     os.environ["QT_ENABLE_HIGHDPI_SCALING"] = "0"
