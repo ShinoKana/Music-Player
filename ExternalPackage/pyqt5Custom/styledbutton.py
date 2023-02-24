@@ -12,7 +12,7 @@ from .imagebox import ImageBox
 class StyledButton(QAbstractButton):
     def __init__(self, text="", icon=None, parent=None):
         super().__init__(parent=parent)
-        self.appManager = __import__("Core").Managers.appManager
+        self.appManager = __import__("Core").appManager
         self.setMinimumSize(100, 45)
 
         self.layout = QHBoxLayout()

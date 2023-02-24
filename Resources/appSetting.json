@@ -1,17 +1,10 @@
 {
     "System": {
-        "AutoCheckUpdate": true,
         "ComponentDarkColor": "#38383f",
-        "ComponentLightColor": "#babfd0",
+        "ComponentLightColor": "#eceaf5",
+        "Language": "zh-tw",
         "MinimizeToTray": true,
         "StartOnBoot": false,
         "ThemeMode": "Dark"
-    },
-    "Document": {
-        "AutoGenerateTags": true,
-        "WrongGrammarColor": "#ffff00",
-        "WrongGrammarDetection": true,
-        "WrongInfoColor": "#ff0000",
-        "WrongInfoDetect": true
     }
 }

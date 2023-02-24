@@ -6,7 +6,7 @@ from typing import Union, Callable
 from PySide2.QtWidgets import QWidget,  QVBoxLayout
 from PySide2.QtGui import QIcon, QPixmap, QColor
 from PySide2.QtCore import Qt
-from Core.Managers import appManager
+from Core import appManager
 
 CardButtonHint = Union[AppWidgetHintClass, 'AppCardButton', StyledButton]
 class AppCardButton(AppWidget(StyledButton)):

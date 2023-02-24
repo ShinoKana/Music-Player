@@ -3,7 +3,7 @@ from .AppWidget import AppWidget, AppWidgetHintClass
 from typing import Union
 from PySide2.QtWidgets import QWidget, QLabel
 from PySide2.QtCore import Qt
-from Core.Managers import appManager
+from Core import appManager
 
 ScrollBoxHint = Union[ScrollArea, AppWidgetHintClass, 'AppScrollBox']
 class AppScrollBox(AppWidget(ScrollArea)):

@@ -1,6 +1,6 @@
 from PySide2.QtWidgets import QLabel
 from PySide2.QtGui import QColor, QPixmap, QIcon
-from Core.Managers import appManager
+from Core import appManager
 from .AppWidget import AppWidget, AppWidgetHintClass
 from typing import Literal, Union
 

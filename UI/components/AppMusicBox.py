@@ -27,7 +27,7 @@ class AppMusicBox(AppWidget(QWidget)):
         self.hLyaout.addWidget(self.vaLayoutWidget, stretch=1)
 
         #info bar
-        self.titleLabel = AppTextLabel(text='----', fontSize=12)
+        self.titleLabel = AppTextLabel(text='', fontSize=12)
         self.title = self.titleLabel.text
         self.SetTitle = self.titleLabel.SetText
 

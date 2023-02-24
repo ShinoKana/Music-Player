@@ -338,12 +338,12 @@ class ColorSettingCard(SettingCard):
             replaceWords = re.search('ColorPickerButton.+?(border: 1px solid rgba.+?;)', colorPickerStyleSheet, re.S).groups()[0]
         else:
             replaceWords = re.search('ColorPickerButton.+?(border: 1px solid rgb.+?;)', colorPickerStyleSheet, re.S).groups()[0]
-        colorPickerStyleSheet = colorPickerStyleSheet.replace(replaceWords, 'border: 2px solid rgba(180, 180, 180, 255);')
+        colorPickerStyleSheet = colorPickerStyleSheet.replace(replaceWords, 'border: 4px solid rgba(255, 255, 255, 255);')
         if qconfig.theme == 'dark':
             replaceWords = re.search('ColorPickerButton.+?(border-bottom: 1px solid rgba.+?;)', colorPickerStyleSheet, re.S).groups()[0]
         else:
             replaceWords = re.search('ColorPickerButton.+?(border-bottom: 1px solid rgb.+?;)', colorPickerStyleSheet, re.S).groups()[0]
-        colorPickerStyleSheet = colorPickerStyleSheet.replace(replaceWords, 'border-bottom: 2px solid rgba(180, 180, 180, 255);')
+        colorPickerStyleSheet = colorPickerStyleSheet.replace(replaceWords, 'border-bottom: 4px solid rgba(255, 255, 255, 255);')
         self.colorPicker.setStyleSheet(colorPickerStyleSheet)
 
 

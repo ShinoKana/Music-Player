@@ -4,7 +4,7 @@ from .AppButton import AppButton
 from .AppScrollBox import AppScrollBox
 from .AppLayoutBox import AppLayoutBox
 from Core.DataType import AutoTranslateWord, FileInfo
-from Core.Managers import appManager
+from Core import appManager
 from typing import Callable, Union, List, Dict, Sequence
 from PySide2.QtGui import QColor
 from PySide2.QtCore import Qt, Signal

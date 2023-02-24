@@ -1,8 +1,7 @@
 from PySide2.QtGui import QColor
 from PySide2.QtCore import Qt
 from PySide2.QtWidgets import QHBoxLayout, QWidget
-from Core.Managers import appManager
-from Core.DataType import AutoTranslateWord, AutoTranslateWordList
+from Core import appManager,AutoTranslateWord, AutoTranslateWordList
 from typing import Callable, Union, Sequence
 from .AppTextLabel import AppTextLabel
 from .AppWidget import AppWidget, AppWidgetHintClass

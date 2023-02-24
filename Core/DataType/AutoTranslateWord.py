@@ -1,13 +1,11 @@
 from typing import List
-from Core.Managers import appManager
+import Core
 
 class AutoTranslateWord(str):
     '''auto translate word'''
     def __new__(cls, s):
-        if not hasattr(cls, "_appManager"):
-            cls._appManager = __import__("Core").appManager
         if isinstance(s, str):
-            return super().__new__(cls, appManager.translate(s))
+            return super().__new__(cls, Core.appManager.translate(s))
         else:
             raise Exception("AutoTranslateWord only accept str as input")
     def __init__(self, rawText:str):
@@ -19,7 +17,7 @@ class AutoTranslateWord(str):
     def rawText(self, newText:any):
         raise Exception("Can't change rawText. Raw text could only be set in constructor")
     def getTranslation(self, targetLanguage:str = None) -> str:
-        return appManager.translate(self.rawText, targetLanguage)
+        return Core.appManager.translate(self.rawText, targetLanguage)
     def __str__(self):
         return self.getTranslation()
     def __repr__(self):
@@ -31,9 +29,9 @@ class AutoTranslateWordList(list):
         return super().__new__(cls, *args, **kwargs)
     def __init__(self, *args):
         if len(args) == 1 and (isinstance(args[0], list) or isinstance(args[0], tuple)):
-            super().__init__([appManager.translate(text) for text in args[0]])
+            super().__init__([Core.appManager.translate(text) for text in args[0]])
         else:
-            super().__init__([appManager.translate(text) for text in list(args)])
+            super().__init__([Core.appManager.translate(text) for text in list(args)])
         self.__rawTextList = list(args)
     @property
     def rawTextList(self) -> List[str]:
@@ -42,7 +40,7 @@ class AutoTranslateWordList(list):
     def rawTextList(self, newTextList:any):
         raise Exception("Can't change rawTextList. Raw text list could only be set in constructor")
     def getTranslations(self, targetLanguage:str = None) -> List[str]:
-        return [appManager.translate(text, targetLanguage) for text in self.rawTextList]
+        return [Core.appManager.translate(text, targetLanguage) for text in self.rawTextList]
     def __repr__(self):
         return "AutoTranslateWordList({})".format(self.rawTextList)
 
@@ -52,7 +50,7 @@ class AutoTranslateEnum(Enum):
     '''auto translate word enum'''
     @DynamicClassAttribute
     def name(self):
-        return appManager.translate(self._name_)
+        return Core.appManager.translate(self._name_)
     @DynamicClassAttribute
     def rawName(self):
         return self._name_

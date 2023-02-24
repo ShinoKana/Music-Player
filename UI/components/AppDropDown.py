@@ -2,7 +2,7 @@ from PySide2.QtCore import Qt, Signal
 from PySide2.QtWidgets import QComboBox, QWidget, QListView, QLabel, QHBoxLayout
 from typing import Union, Sequence, List, Callable
 from .AppWidget import AppWidget, AppWidgetHintClass
-from Core.Managers import appManager
+from Core import appManager
 from Core.DataType import AutoTranslateWord, AutoTranslateWordList
 
 DropDownHint = Union[AppWidgetHintClass, QComboBox, 'AppDropDown']

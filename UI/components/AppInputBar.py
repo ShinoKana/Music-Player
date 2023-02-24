@@ -2,7 +2,7 @@ from .AppWidget import AppWidget, AppWidgetHintClass
 from .AppTextLabel import AppTextLabel
 from PySide2.QtWidgets import QLineEdit, QWidget, QHBoxLayout
 from PySide2.QtGui import QColor
-from Core.Managers import appManager
+from Core import appManager
 from typing import Union
 
 InputBarHint = Union[AppWidgetHintClass, QLineEdit, 'AppInputBar']

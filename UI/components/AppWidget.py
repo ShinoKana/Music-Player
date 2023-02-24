@@ -1,7 +1,7 @@
 from PySide2.QtWidgets import QWidget
 from PySide2.QtCore import Qt
 from PySide2.QtGui import QColor,QResizeEvent
-from Core.Managers import appManager
+from Core import appManager
 from typing import Union, Literal
 import os
 

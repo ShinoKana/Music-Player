@@ -21,21 +21,13 @@ Default_Icon_Type = Literal["Web", "Link", "Help", "Font", "Info", "Zoom", "Clos
 from .Manager import *
 @Manager
 class ConfigManager(QConfig):
-    # document
-    wrongGrammarDetectConfig = ConfigItem("Document", "WrongGrammarDetection", True, BoolValidator())
-    wrongGrammarColorConfig = ColorConfigItem("Document", "WrongGrammarColor", QColor(255, 255, 0))
-    wrongInfoDetectConfig = ConfigItem("Document", "WrongInfoDetect", True, BoolValidator())
-    wrongInfoColorConfig = ColorConfigItem("Document", "WrongInfoColor", QColor(255, 0, 0))
-    genTagsConfig = ConfigItem("Document", "AutoGenerateTags", True, BoolValidator())
-
     #system
     themeModeConfig = OptionsConfigItem("System", "ThemeMode", "Light", OptionsValidator(["Light", "Dark", "Auto"]), restart=True)
     componentLightColorConfig = ColorConfigItem("System", "ComponentLightColor", QColor(119, 176, 253), restart=True)
     componentDarkColorConfig = ColorConfigItem("System", "ComponentDarkColor", QColor(39, 58, 83), restart=True)
-    languageConfig = None
+    languageConfig = OptionsConfigItem("System", "Language", "en", OptionsValidator(["en",'zh-cn','zh-tw']))
     startOnBootConfig = ConfigItem("System", "StartOnBoot", False, BoolValidator())
     minimizeToTrayConfig = ConfigItem("System", "MinimizeToTray", True, BoolValidator())
-    autoCheckUpdateConfig = ConfigItem("System", "AutoCheckUpdate", True, BoolValidator())
 
     def __init__(self):
         #translation
@@ -46,9 +38,7 @@ class ConfigManager(QConfig):
         with open(TRANSLATION_DATA_PATH, 'r', encoding='utf-8') as translationFile:
             hasGetLanguages = False
             for i, line in enumerate(translationFile.readlines()):
-                if line[0] == '\n' or len(line) == 0:
-                    continue
-                elif line[0] == '#':
+                if line[0] == '\n' or len(line) == 0 or line[0] == '#':
                     continue
                 # getTranslation languages
                 elif not hasGetLanguages:
@@ -62,11 +52,12 @@ class ConfigManager(QConfig):
                     self._translationData[str(lst[0]).lower().replace(r'\,', ',')] = [s.replace(r'\,', ',') for s in lst[1:]]
         if len(self._languages) == 0:
             raise Exception('No language found')
-        self.languageConfig = OptionsConfigItem("System", "Language", self._languages[0], OptionsValidator(self._languages))
+        self.languageConfig.validator = OptionsValidator(self._languages)
         # setting
         self._cfg = self
         self.file = Path(APP_SETTING_PATH)
         qconfig.load(APP_SETTING_PATH, self)
+        self._currentLanguage = self._languages.index(self.languageConfig.value)
 
     @property
     def languages(self) -> List[str]:
@@ -93,7 +84,7 @@ class ConfigManager(QConfig):
         return self.theme == "dark"
     def currentComponentColor(self)->QColor:
         return self.componentLightColorConfig.value if self.isLightTheme() else self.componentDarkColorConfig.value
-    def currentComponentColor_DarkerOrLighter(self, value=150)->QColor:
+    def currentComponentColor_DarkerOrLighter(self, value=120)->QColor:
         if self.isLightTheme():
             return self.componentLightColorConfig.value.darker(value)
         else:
@@ -144,7 +135,7 @@ class AppManager:
         if len(matches) == 0:
             #single translation key
             try:
-                return self.translationData[text][self.config.currentLanguageIndex if targetLanguage is None else self.languages.index(targetLanguage)]
+                return self.translationData[str(text).lower()][self.config.currentLanguageIndex if targetLanguage is None else self.languages.index(targetLanguage)]
             except KeyError:
                 return text
         else:

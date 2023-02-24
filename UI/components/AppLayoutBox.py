@@ -84,20 +84,17 @@ class AppLayoutBox(AppWidget(QWidget)):
         label.setPixmap(img)
         self.layout.addWidget(label, stretch=stretch)
         self.__components.append(label)
-        #self.adjustSize()
         return label
     def addText(self, text:str, fontSize:int=None, fontColor:Union[str,QColor]=None, stretch:int=0) -> AppTextLabel:
         label = AppTextLabel(text=text, fontSize=fontSize, fontColor=fontColor, height=int(self.height()*0.93))
         label.SetBackgroundColor('transparent')
         self.layout.addWidget(label, stretch=stretch)
         self.__components.append(label)
-        #self.adjustSize()
         return label
     def addButton(self, text=None, img:Union[QPixmap, str, QIcon]=None, command:Callable[[],any]=None, stretch:int=0) -> AppButton:
         button = AppButton(parent=self, text=text, icon=img, height=int(self.height()*0.95), command=command)
         self.layout.addWidget(button, stretch=stretch)
         self.__components.append(button)
-        self.adjustSize()
         return button
     def addWidget(self, widget:QWidget, stretch:int=0):
         if isinstance(widget, QWidget):
@@ -105,7 +102,6 @@ class AppLayoutBox(AppWidget(QWidget)):
             widget.resize(widget.size().width(),int(self.height()*0.95))
             self.__components.append(widget)
             self.layout.addWidget(widget, stretch=stretch)
-            self.adjustSize()
         else:
             raise TypeError("widget must be QWidget")
 

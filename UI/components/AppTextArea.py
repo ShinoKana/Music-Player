@@ -1,7 +1,7 @@
 from PySide2.QtWidgets import QTextEdit
 from PySide2.QtGui import QColor
 from .AppWidget import AppWidget, AppWidgetHintClass
-from Core.Managers import appManager
+from Core import appManager
 from typing import Union, Literal
 
 AppTextAreaHint = Union[QTextEdit, AppWidgetHintClass, 'AppTextArea']

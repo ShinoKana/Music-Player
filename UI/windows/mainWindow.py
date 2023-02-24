@@ -2,7 +2,7 @@ from PySide2.QtCore import QPropertyAnimation, QSize, QEasingCurve, QVariantAnim
 from PySide2.QtWidgets import QVBoxLayout, QWidget
 
 from Core.DataType import AutoTranslateWord
-from Core.Managers import appManager
+from Core import appManager
 
 from .AppWindow import AppWindow
 from pages import SettingPage, HomePage, PlayerPage, SongListPage
@@ -12,7 +12,7 @@ class MainWindow(AppWindow):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, title=AutoTranslateWord('(22-23CUHK) CSCI3280 Group Project - Music Player'), windowSize=(1500, 900), navBarRatio=1/11,**kwargs)
-        self.__VERSION = '1.0.0'
+
         self.__isHiding = False
         #music box
         self.musicBox = AppMusicBox(borderCornerRadius=0, backgroundColor=appManager.config.currentComponentColor_DarkerOrLighter())
@@ -43,7 +43,7 @@ class MainWindow(AppWindow):
         #navigation bar
         self.addNavBarSwitchPageButton(AutoTranslateWord("Home"), appManager.getUIImagePath("home.png"), self.homePage)
         self.addNavBarSwitchPageButton(AutoTranslateWord("Player"), appManager.getUIImagePath("play.png"), self.playerPage)
-        self.addNavBarSwitchPageButton(AutoTranslateWord("SongList"), appManager.getUIImagePath("dots_horizon.png"), self.songListPage)
+        self.addNavBarSwitchPageButton(AutoTranslateWord("SongList"), appManager.getUIImagePath("3bar.png"), self.songListPage)
         self.addNavBarSwitchPageButton(AutoTranslateWord("Setting"), appManager.getUIImagePath("gear.png"), self.settingPage)
 
         self.switchPage(self.homePage)
@@ -65,19 +65,16 @@ class MainWindow(AppWindow):
         self.openAni_size.start()
         self.openAni_opacity.start()
         # endregion
-    @property
-    def VERSION(self):
-        return self.__VERSION
+
     def allowMultiplePageInstances(cls):
         return False
     def hideOrShowMainWindow(self):
         if not self.__isHiding:
             self.hideNavBar()
             self.naviBarHideButton.hide()
-            self.titleBar.hide()
-            #hide page
+
             animation_main = QVariantAnimation(self)
-            animation_main.setDuration(200)
+            animation_main.setDuration(220)
             animation_main.setStartValue(self.height())
             animation_main.setEndValue(self.musicBox.height())
             animation_main.valueChanged.connect(lambda value: self.setMaximumHeight(value))
@@ -95,10 +92,9 @@ class MainWindow(AppWindow):
         else:
             self.showNavBar()
             self.naviBarHideButton.show()
-            self.titleBar.show()
-            #show page
+
             animation_main = QVariantAnimation(self)
-            animation_main.setDuration(200)
+            animation_main.setDuration(220)
             animation_main.setStartValue(self.height())
             animation_main.setEndValue(self.DEFALUT_WINDOW_SIZE[1])
             animation_main.valueChanged.connect(lambda value: self.setMaximumHeight(value))

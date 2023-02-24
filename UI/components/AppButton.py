@@ -2,7 +2,7 @@ from .AppWidget import AppWidget, AppWidgetHintClass
 from PySide2.QtGui import QColor
 from typing import Union, Callable, List
 from ExternalPackage.pyqt5Custom import StyledButton
-from Core.Managers import appManager
+from Core import appManager
 
 ButtonHint = Union[AppWidgetHintClass, StyledButton, 'AppButton']
 class AppButton(AppWidget(StyledButton)):

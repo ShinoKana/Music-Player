@@ -1,6 +1,6 @@
 from ExternalPackage import SettingCard, ExpandSettingCard
 import re
-from Core.Managers import appManager
+from Core import appManager
 from PySide2.QtGui import QColor
 
 #region change card init

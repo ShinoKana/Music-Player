@@ -3,7 +3,7 @@ from PySide2.QtGui import QIcon,QPixmap
 from PySide2.QtCore import QSize
 from .AppWidget import AppWidget, AppWidgetHintClass
 from typing import Union, Tuple, Callable, Sequence
-from Core.Managers import appManager
+from Core import appManager
 
 TabBarHint = Union[QTabBar,'AppTabBar',AppWidgetHintClass]
 class AppTabBar(AppWidget(QTabBar)):

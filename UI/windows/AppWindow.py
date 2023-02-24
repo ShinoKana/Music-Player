@@ -5,7 +5,7 @@ from PySide2.QtGui import QColor, QIcon, QPixmap, QResizeEvent, QCloseEvent
 from PySide2.QtCore import QVariantAnimation, Signal
 
 from Core.DataType import AutoTranslateWord
-from Core.Managers import appManager
+from Core import appManager
 
 from ExternalPackage import ToastToolTip
 from ExternalPackage.qframelesswindow import FramelessWindow
@@ -225,7 +225,7 @@ class AppWindow(FramelessWindow):
         self.navigationBar.addButton(text, iconPath, callback)
     def addNavBarSwitchPageButton(self, text:str, iconPath:str, page:AppPage):
         button = self.navigationBar.addButton(text, iconPath, lambda: self.switchPage(page))
-        col = button.backgroundColor.darker() if appManager.config.isLightTheme() else button.backgroundColor.lighter()
+        col = appManager.config.currentComponentColor_DarkerOrLighter()
         originCol = button.backgroundColor
         def changeButtonColor(*args):
             button.SetBackgroundColor(col) if self.currentPage == page else button.SetBackgroundColor(originCol)
