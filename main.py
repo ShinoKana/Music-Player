@@ -1,12 +1,19 @@
+import os
+import sys
+sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)),"UI"))
+sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)),"Core"))
+sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)),"ExternalPackage"))
+
 from Core import *
 from UI import *
 from ExternalPackage import dpi_manager
 from PySide2.QtCore import Qt
 from PySide2.QtWidgets import QApplication
-import os
-import sys
+
 
 if __name__ == '__main__':
+
+    print(sys.path)
 
     # enable high dpi scale
     os.environ["QT_ENABLE_HIGHDPI_SCALING"] = "0"

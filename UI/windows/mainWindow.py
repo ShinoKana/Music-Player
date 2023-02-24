@@ -5,7 +5,7 @@ from Core.DataType import AutoTranslateWord
 from Core import appManager
 
 from .AppWindow import AppWindow
-from pages import SettingPage, HomePage, PlayerPage, SongListPage
+from pages import SettingPage, HomePage, PlayerPage, SongListPage, GroupInfoPage
 from components import AppMusicBox, AppButton
 
 class MainWindow(AppWindow):
@@ -39,12 +39,14 @@ class MainWindow(AppWindow):
         self.homePage = self.addPage(HomePage)
         self.playerPage = self.addPage(PlayerPage)
         self.songListPage = self.addPage(SongListPage)
+        self.groupInfoPage = self.addPage(GroupInfoPage)
 
         #navigation bar
         self.addNavBarSwitchPageButton(AutoTranslateWord("Home"), appManager.getUIImagePath("home.png"), self.homePage)
-        self.addNavBarSwitchPageButton(AutoTranslateWord("Player"), appManager.getUIImagePath("play.png"), self.playerPage)
+        self.addNavBarSwitchPageButton(AutoTranslateWord("Player"), appManager.getUIImagePath("stop.png"), self.playerPage)
         self.addNavBarSwitchPageButton(AutoTranslateWord("SongList"), appManager.getUIImagePath("3bar.png"), self.songListPage)
         self.addNavBarSwitchPageButton(AutoTranslateWord("Setting"), appManager.getUIImagePath("gear.png"), self.settingPage)
+        self.addNavBarSwitchPageButton(AutoTranslateWord("GroupInfo"), appManager.getUIImagePath("user.png"), self.groupInfoPage)
 
         self.switchPage(self.homePage)
 
