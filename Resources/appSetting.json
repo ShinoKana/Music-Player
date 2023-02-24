@@ -1,0 +1,17 @@
+{
+    "System": {
+        "AutoCheckUpdate": true,
+        "ComponentDarkColor": "#38383f",
+        "ComponentLightColor": "#babfd0",
+        "MinimizeToTray": true,
+        "StartOnBoot": false,
+        "ThemeMode": "Dark"
+    },
+    "Document": {
+        "AutoGenerateTags": true,
+        "WrongGrammarColor": "#ffff00",
+        "WrongGrammarDetection": true,
+        "WrongInfoColor": "#ff0000",
+        "WrongInfoDetect": true
+    }
+}
