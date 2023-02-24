@@ -20,7 +20,7 @@ CUHK22-23 CSCI3280 Group Project
 * Python 3.8.5 或以上
 
 ### 文件夾說明
-* ### `Core`
+* ### `Core`: 核心代碼
   * `Managers`: 單例模式的manager，管理所有操作
     * `AppManager`: 專門處理軟件的manager，包括軟件path、設定、語言、主題等
   * `DataType`: 數據類型、結構
