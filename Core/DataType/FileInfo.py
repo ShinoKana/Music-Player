@@ -3,6 +3,7 @@ from mimetypes import guess_type
 import os
 from PySide2.QtGui import QIcon
 from .AutoTranslateWord import AutoTranslateEnum
+import Core
 
 class FileType(AutoTranslateEnum):
     DOC = 0
@@ -71,19 +72,19 @@ class FileInfo:
 
         self._fileIcon: Optional[QIcon] = None
         if self._fileType == FileType.DOC:
-            self._fileIcon = QIcon(appManager.getUIImagePath("docx.png"))
+            self._fileIcon = QIcon(Core.appManager.getUIImagePath("docx.png"))
         elif self._fileType == FileType.TXT:
-            self._fileIcon = QIcon(appManager.getUIImagePath("txt.png"))
+            self._fileIcon = QIcon(Core.appManager.getUIImagePath("txt.png"))
         elif self._fileType == FileType.PDF:
-            self._fileIcon = QIcon(appManager.getUIImagePath("pdf.png"))
+            self._fileIcon = QIcon(Core.appManager.getUIImagePath("pdf.png"))
         elif self._fileType == FileType.IMG:
-            self._fileIcon = QIcon(appManager.getUIImagePath("jpg.png"))
+            self._fileIcon = QIcon(Core.appManager.getUIImagePath("jpg.png"))
         elif self._fileType == FileType.VIDEO:
-            self._fileIcon = QIcon(appManager.getUIImagePath("mov.png"))
+            self._fileIcon = QIcon(Core.appManager.getUIImagePath("mov.png"))
         elif self._fileType == FileType.AUDIO:
-            self._fileIcon = QIcon(appManager.getUIImagePath("audio.png"))
+            self._fileIcon = QIcon(Core.appManager.getUIImagePath("audio.png"))
         else:
-            self._fileIcon = QIcon(appManager.getUIImagePath("unknown.png"))
+            self._fileIcon = QIcon(Core.appManager.getUIImagePath("unknown.png"))
     @property
     def filePath(self) :
         return self._filePath

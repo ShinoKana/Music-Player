@@ -188,7 +188,8 @@ class StyledButton(QAbstractButton):
                 self.conlyt.insertWidget(0, self._icon, alignment=Qt.AlignCenter)
 
     def setIconSize(self, width, height):
-        self._icon.setFixedSize(width, height)
+        if self._icon is not None:
+            self._icon.setFixedSize(width, height)
 
     def update(self):
         self.anim_hover.update()

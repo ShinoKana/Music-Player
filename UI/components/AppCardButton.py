@@ -14,7 +14,6 @@ class AppCardButton(AppWidget(StyledButton)):
                  text='', textFontSize=12, textBold=False, textFontColor=None, icon:Union[str, QIcon, QPixmap]=None,
                  command:Callable[[],any]=None, **kwargs):
         super().__init__(height=height, icon=icon, **kwargs)
-        self.__commands = []
         self.setIconSize(self.size().width(), self.size().height())
 
         self.conwdt.setStyleSheet("background-color:transparent;")
@@ -25,8 +24,10 @@ class AppCardButton(AppWidget(StyledButton)):
         self.vlayout.setSpacing(5)
         self.vlayout.setAlignment(Qt.AlignVCenter)
 
-        self.titleLabel = AppTextLabel(text=title, fontSize=titleFontSize, fontBold=True, fontColor=titleFontColor, textAlign='center', backgroundColor='transparent')
-        self.textLabel = AppTextLabel(text=text, fontSize=textFontSize, fontColor=textFontColor, textAlign='center', backgroundColor='transparent', wrap=True)
+        self.titleLabel = AppTextLabel(text=title, fontSize=titleFontSize, fontBold=titleBold, fontColor=titleFontColor,
+                                       textAlign='center', backgroundColor='transparent')
+        self.textLabel = AppTextLabel(text=text, fontSize=textFontSize, fontColor=textFontColor, textAlign='center',
+                                      backgroundColor='transparent', wrap=True, fontBold=textBold)
 
         self.vlayout.addWidget(self.titleLabel)
         self.vlayout.addWidget(self.textLabel)
@@ -37,6 +38,9 @@ class AppCardButton(AppWidget(StyledButton)):
         self.conlyt.setStretch(1, 1)
         self.conlyt.setStretch(0, 0)
         self.layout.setStretch(0, 1)
+
+        if command:
+            self.addCommand(command)
 
         self.adjustSize()
     @property
@@ -56,13 +60,9 @@ class AppCardButton(AppWidget(StyledButton)):
     def SetText(self:CardButtonHint, text:str):
         self.textLabel.SetText(text)
     def addCommand(self:CardButtonHint, command:Callable[[],any]):
-        if command not in self.__commands:
-            self.__commands.append(command)
-            self.clicked.connect(command)
+        self.clicked.connect(command)
     def removeCommand(self:CardButtonHint, command:Callable[[],any]):
-        if command in self.__commands:
-            self.__commands.remove(command)
-            self.clicked.disconnect(command)
+        self.clicked.disconnect(command)
     @property
     def commands(self) -> list:
         return self.__commands
