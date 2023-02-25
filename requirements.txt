@@ -1,0 +1,17 @@
+PySide2
+Pillow
+certifi
+charset-normalizer
+colorthief
+idna
+numpy
+pywin32
+requests
+scipy
+shiboken2
+urllib3
+darkdetect
+sqlite3
+wave
+matplotlib
+soundfile
