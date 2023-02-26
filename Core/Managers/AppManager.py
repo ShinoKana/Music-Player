@@ -4,10 +4,10 @@ from pathlib import Path
 
 from PySide2.QtGui import QColor
 from PySide2.QtCore import QObject, Signal
-from ExternalPackage import (ConfigValidator, OptionsConfigItem, OptionsValidator, ColorConfigItem, BoolValidator,
+from ExternalPackage.qfluentwidgets.common import (ConfigValidator, OptionsConfigItem, OptionsValidator, ColorConfigItem, BoolValidator,
                             ConfigItem, ConfigSerializer, ColorValidator, exceptionHandler, ColorSerializer,
                             RangeValidator, QConfig, qconfig)
-
+print('here')
 #path
 RESOURCE_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), '../..', "Resources")
 RESOURCE_IMAGE_PATH = os.path.join(RESOURCE_PATH, "images")
@@ -69,7 +69,7 @@ class ConfigManager(QConfig):
         for name in dir(self.__class__):
             value = getattr(self.__class__, name)
             if isinstance(value, ConfigItem):
-                value.onValueChanged.connect(lambda *args: self.save())
+                value.onValueChanged.append(lambda *args: self.save())
 
     @property
     def languages(self) -> List[str]:
@@ -106,7 +106,7 @@ class ConfigManager(QConfig):
 AppRecordValidator = ConfigValidator
 AppRecordSerializer = ConfigSerializer
 class RecordItem:
-    onValueChanged = Signal(object)
+    onValueChanged = []
     def __init__(self, group: str, name: str, default, validator: AppRecordValidator = None,
                  serializer: AppRecordSerializer = None):
         self.group = group
@@ -121,7 +121,8 @@ class RecordItem:
     @value.setter
     def value(self, v):
         self.__value = self.validator.correct(v)
-        self.onValueChanged.emit(self.__value)
+        for callback in self.onValueChanged:
+            callback(self.__value)
     @property
     def key(self):
         return self.group+"."+self.name if self.name else self.group
@@ -159,7 +160,7 @@ class AppRecord(QObject):
         for name in dir(self.__class__):
             value = getattr(self.__class__, name)
             if isinstance(value, RecordItem):
-                value.onValueChanged.connect(lambda *args: self.save())
+                value.onValueChanged.append(lambda *args: self.save())
     def __del__(self):
         self.save()
     def get(self, item: RecordItem):

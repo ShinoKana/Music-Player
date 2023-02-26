@@ -8,6 +8,7 @@ from PySide2.QtCore import QObject, Signal
 from PySide2.QtGui import QColor
 from .exception_handler import exceptionHandler
 
+#region ConfigValidator
 class ConfigValidator:
     """ Config validator """
 
@@ -48,6 +49,7 @@ class OptionsValidator(ConfigValidator):
 
     def correct(self, value):
         return value if self.validate(value) else self.options[0]
+
 class BoolValidator(OptionsValidator):
     """ Boolean validator """
 
@@ -91,8 +93,9 @@ class ColorValidator(ConfigValidator):
 
     def correct(self, value):
         return QColor(value) if self.validate(value) else self.default
+#endregion
 
-
+#region ConfigSerializer
 class ConfigSerializer:
     """ Config serializer """
 
@@ -125,10 +128,12 @@ class ColorSerializer(ConfigSerializer):
             return QColor(*value)
 
         return QColor(value)
+#endregion
 
+#region ConfigItem
 class ConfigItem:
     """ Config item """
-    onValueChanged = Signal(object)
+    onValueChanged = []
     def __init__(self, group: str, name: str, default, validator: ConfigValidator = None,
                  serializer: ConfigSerializer = None, restart=False):
         """
@@ -166,7 +171,8 @@ class ConfigItem:
     @value.setter
     def value(self, v):
         self.__value = self.validator.correct(v)
-        self.onValueChanged.emit(self.__value)
+        for callback in self.onValueChanged:
+            callback(self.__value)
     @property
     def key(self):
         """ getTranslation the config key separated by `.` """
@@ -191,13 +197,13 @@ class RangeConfigItem(ConfigItem):
         return f'{self.__class__.__name__}[range={self.range}, value={self.value}]'
 class OptionsConfigItem(ConfigItem):
     """ Config item with options """
-
     @property
     def options(self):
         return self.validator.options
 
     def __str__(self) -> str:
         return f'{self.__class__.__name__}[options={self.options}, value={self.value}]'
+
 class ColorConfigItem(ConfigItem):
     """ Color config item """
 
@@ -207,11 +213,10 @@ class ColorConfigItem(ConfigItem):
 
     def __str__(self) -> str:
         return f'{self.__class__.__name__}[value={self.value.name()}]'
-
+#endregion
 
 class QConfig(QObject):
     """ Config of app """
-
     appRestartSig = Signal()
     themeModeConfig = OptionsConfigItem("MainWindow", "Theme", "Light", OptionsValidator(["Light", "Dark", "Auto"]))
 

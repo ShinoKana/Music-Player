@@ -72,4 +72,3 @@ class Manager:
     def OnAppEnd():
         for delMethod in Manager._delMethods[::-1]:
             delMethod()
-
