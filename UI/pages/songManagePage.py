@@ -1,4 +1,4 @@
-from Core.DataType import AutoTranslateWord
+from Core.DataType import FileType
 from .AppPage import AppPage
 from typing import Union
 from PySide2.QtWidgets import QFrame, QLayout
@@ -10,8 +10,8 @@ class SongManagePage(AppPage):
         super().__init__(appWindow=appWindow, parent=parent, titleText=AutoTranslateWord("Song Manage"))
 
         self.addComponent(AppTextLabel(text=AutoTranslateWord("Upload Song"),backgroundColor="transparent", textAlign="left", fontSize=20, fontBold=True))
-
-        self.addComponent(AppUploadFileArea_WithFileBox(hintText=AutoTranslateWord("Drag or click to add your song here")))
+        self.addComponent(AppUploadFileArea_WithFileBox(hintText=AutoTranslateWord("Drag or click to add your song here"),
+                                                        onlyAcceptFiles=tuple(FileType.AUDIO.value)))
 
         # region search bar
         self.searchBar = AppSearchBar_WithDropDown(titleText=AutoTranslateWord("Search Song"),

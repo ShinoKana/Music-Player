@@ -13,7 +13,7 @@ class AppLayoutBox(AppWidget(QWidget)):
                                   Tuple[Optional[str],Union[str,QPixmap,QIcon,None],Optional[Callable[[],any]]],
                                   Tuple[Union[QWidget, AppWidgetHintClass]]]]]=None,
                  align:Literal['left','right','top','bottom','center']='center', **kwargs):
-        super().__init__(**kwargs)
+        super().__init__(height=height, width=width, **kwargs)
         self.__align = None
         self.__components = []
         self.__direction = direction

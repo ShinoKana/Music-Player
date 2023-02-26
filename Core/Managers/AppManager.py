@@ -3,11 +3,10 @@ from typing import Dict, List
 from pathlib import Path
 
 from PySide2.QtGui import QColor
-from PySide2.QtCore import QObject, Signal
+from PySide2.QtCore import QObject
 from ExternalPackage.qfluentwidgets.common import (ConfigValidator, OptionsConfigItem, OptionsValidator, ColorConfigItem, BoolValidator,
                             ConfigItem, ConfigSerializer, ColorValidator, exceptionHandler, ColorSerializer,
                             RangeValidator, QConfig, qconfig)
-print('here')
 #path
 RESOURCE_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), '../..', "Resources")
 RESOURCE_IMAGE_PATH = os.path.join(RESOURCE_PATH, "images")

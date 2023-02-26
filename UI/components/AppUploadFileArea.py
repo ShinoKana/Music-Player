@@ -199,9 +199,10 @@ class AppUploadFileArea_WithFileBox(AppWidget(QWidget)):
             if len(pathStr) > 40:
                 pathStr = '...' + pathStr[-37:]
             itemBox.addText(pathStr, stretch=1)
-            itemBox.addText(fileInfo.fileType, stretch=1)
+            itemBox.addText(fileInfo.fileType.name, stretch=1)
             itemBox.addText(fileInfo.fileSize_withUnit(), stretch=1)
             itemBox.addButton(AutoTranslateWord('delete'), appManager.getUIImagePath('cross.png'), command= lambda: self.removeFile(fileInfo), stretch=0)
+            itemBox.adjustSize()
             self.fileListBox.addComponent(itemBox)
             self.__currentFileBoxes[fileInfo.filePath] = itemBox
             self.fileListBox.show()
