@@ -46,12 +46,12 @@ class AppWindow(FramelessWindow):
                         self.titleBar.raise_()
                 cls.__init__ = newInit
             return cls._instance
-    def __init__(self, QApp: QApplication, parentWindow:'AppWindow'=None, title:str="", iconPath:str=appManager.getUIImagePath("square_logo.png"),
+    def __init__(self, QApp: QApplication, parentWindow:'AppWindow'=None, title:str="", iconPath:str= appManager.getUIImagePath("square_logo.png"),
                  windowSize:tuple=(1600, 900), navBarRatio:float=1/11, needNavBar:bool=True, needTopNavBar:bool=False):
         super().__init__(parent=None)
 
         palette = self.palette()
-        palette.setColor(self.backgroundRole(), QColor('black'))
+        palette.setColor(self.backgroundRole(), QColor('transparent'))
         self.setPalette(palette)
 
         self.__QApp = QApp

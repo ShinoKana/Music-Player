@@ -7,13 +7,14 @@ from PySide2.QtWidgets import QWidget, QVBoxLayout, QLabel
 from PySide2.QtGui     import QColor, QPainter, QPen, QBrush, QDropEvent
 from .imagebox import ImageBox
 from Core.DataType import FileInfo
+import Core
 
 class DragDropFile(QWidget):
 
     fileDropped = Signal(FileInfo)
     def __init__(self, parent=None):
         super().__init__(parent=parent)
-        self.appManager = __import__("Core").Managers.appManager
+
         self.setAcceptDrops(True)
 
         self.setMinimumSize(120, 65)
@@ -29,7 +30,7 @@ class DragDropFile(QWidget):
 
         #self.title_lbl = QLabel(AutoTranslateWord("Drop your file here!").getTranslation())
         self.title_lbl = QLabel()
-        self.addIcon = ImageBox(self.appManager.getUIImagePath("plus.png"))
+        self.addIcon = ImageBox(Core.appManager.getUIImagePath("plus.png"))
 
         self.layout.addWidget(self.title_lbl, alignment=Qt.AlignCenter)
         self.layout.addSpacing(7)
