@@ -128,6 +128,7 @@ class ColorSerializer(ConfigSerializer):
 
 class ConfigItem:
     """ Config item """
+    onValueChanged = Signal(object)
     def __init__(self, group: str, name: str, default, validator: ConfigValidator = None,
                  serializer: ConfigSerializer = None, restart=False):
         """
@@ -165,6 +166,7 @@ class ConfigItem:
     @value.setter
     def value(self, v):
         self.__value = self.validator.correct(v)
+        self.onValueChanged.emit(self.__value)
     @property
     def key(self):
         """ getTranslation the config key separated by `.` """

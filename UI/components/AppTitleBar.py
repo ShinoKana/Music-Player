@@ -45,10 +45,12 @@ class AppTitleBar(AppWidget(TitleBar)):
                     button.setHoverBackgroundColor(QColor(255, 255, 255, 26))
                     button.setPressedBackgroundColor(QColor(255, 255, 255, 51))
         if titleText:
-            self.parent().setWindowTitle(titleText)
+            if self.appWindow is not None:
+                self.appWindow.setWindowTitle(titleText)
             self.SetTitle(titleText)
         if iconPath:
-            self.parent().setWindowIcon(QIcon(iconPath))
+            if self.appWindow is not None:
+                self.appWindow.setWindowIcon(QIcon(iconPath))
             self.SetIcon(iconPath)
     @property
     def title(self):

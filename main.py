@@ -1,5 +1,8 @@
 import os
 import sys
+
+import Core
+
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)),"Core"))
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)),"ExternalPackage"))
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)),"UI"))
@@ -9,6 +12,7 @@ from UI import *
 from ExternalPackage import dpi_manager
 from PySide2.QtCore import Qt
 from PySide2.QtWidgets import QApplication
+from PySide2.QtGui import QIcon
 
 if __name__ == '__main__':
 

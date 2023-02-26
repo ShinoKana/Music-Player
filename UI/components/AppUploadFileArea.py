@@ -68,7 +68,7 @@ class AppUploadFileArea(AppWidget(DragDropFile)):
             filepath = QFileDialog.getOpenFileNames(self, clickAddFileHint, '', acceptFiles)
             if len(filepath[0]) > 0:
                 for path in filepath[0]:
-                    fileInfo = FileInfo(path)
+                    fileInfo = FileInfo.FromFilePath(path)
                     self.fileDropped.emit(fileInfo)
         self.OnClickSignal.connect(clickToAddFile)
         self.OnClickSignal.connect(onClick) if onClick else None

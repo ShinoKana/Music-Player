@@ -3,7 +3,7 @@ from typing import Dict, List
 from pathlib import Path
 
 from PySide2.QtGui import QColor
-from PySide2.QtCore import QObject
+from PySide2.QtCore import QObject, Signal
 from ExternalPackage import (ConfigValidator, OptionsConfigItem, OptionsValidator, ColorConfigItem, BoolValidator,
                             ConfigItem, ConfigSerializer, ColorValidator, exceptionHandler, ColorSerializer,
                             RangeValidator, QConfig, qconfig)
@@ -66,6 +66,10 @@ class ConfigManager(QConfig):
         self.file = Path(APP_SETTING_PATH)
         qconfig.load(APP_SETTING_PATH, self)
         self._currentLanguage = self._languages.index(self.languageConfig.value)
+        for name in dir(self.__class__):
+            value = getattr(self.__class__, name)
+            if isinstance(value, ConfigItem):
+                value.onValueChanged.connect(lambda *args: self.save())
 
     @property
     def languages(self) -> List[str]:
@@ -102,7 +106,7 @@ class ConfigManager(QConfig):
 AppRecordValidator = ConfigValidator
 AppRecordSerializer = ConfigSerializer
 class RecordItem:
-    """ Config item """
+    onValueChanged = Signal(object)
     def __init__(self, group: str, name: str, default, validator: AppRecordValidator = None,
                  serializer: AppRecordSerializer = None):
         self.group = group
@@ -117,6 +121,7 @@ class RecordItem:
     @value.setter
     def value(self, v):
         self.__value = self.validator.correct(v)
+        self.onValueChanged.emit(self.__value)
     @property
     def key(self):
         return self.group+"."+self.name if self.name else self.group
@@ -151,6 +156,10 @@ class AppRecord(QObject):
     def __init__(self, recordPath:str):
         super().__init__()
         self.file = Path(recordPath)
+        for name in dir(self.__class__):
+            value = getattr(self.__class__, name)
+            if isinstance(value, RecordItem):
+                value.onValueChanged.connect(lambda *args: self.save())
     def __del__(self):
         self.save()
     def get(self, item: RecordItem):

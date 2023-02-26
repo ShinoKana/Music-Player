@@ -66,7 +66,7 @@ class AppWindow(FramelessWindow):
         self.__NavBarAndPageRatio = navBarRatio
 
         #title bar
-        self.setTitleBar(AppTitleBar(parent=self, titleText=title, iconPath=iconPath))
+        self.setTitleBar(AppTitleBar(appWindow=self, parent=self, titleText=title, iconPath=iconPath))
 
         #loadingBox
         self.loadingSpinner = Spinner(3, QColor('white'))

@@ -60,7 +60,7 @@ class DragDropFile(QWidget):
 
     def dropEvent(self, event:QDropEvent):
         for url in event.mimeData().urls():
-            file = FileInfo(url.toLocalFile())
+            file = FileInfo.FromFilePath(url.toLocalFile())
             self.fileDropped.emit(file)
 
         self.dragEnter = False
