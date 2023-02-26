@@ -75,6 +75,8 @@ class AppPage(ScrollArea):
             raise ValueError('margins must be tuple or 4 int')
     def onSwitchIn(self):
         pass
+    def onSwitchOut(self):
+        pass
     def resizeEvent(self, e):
         ''' override resizeEvent of QScrollArea '''
         self.scrollWidget.resize(self.width(), self.scrollWidget.height())

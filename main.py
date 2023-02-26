@@ -4,7 +4,7 @@ sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)),"UI"))
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)),"Core"))
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)),"ExternalPackage"))
 
-from Core import *
+import Core
 from UI import *
 from ExternalPackage import dpi_manager
 from PySide2.QtCore import Qt
@@ -23,4 +23,5 @@ if __name__ == '__main__':
     mainWin.show()
 
     ret = app.exec_()
+    Core.Manager.OnAppEnd()
     sys.exit(ret)

@@ -9,3 +9,5 @@ class PlayerPage(AppPage):
 
     def onSwitchIn(self):
         pass
+    def onSwitchOut(self):
+        pass

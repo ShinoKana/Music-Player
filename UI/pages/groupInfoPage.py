@@ -4,6 +4,7 @@ from .AppPage import AppPage
 from components import AppCardButton, AppHyperlinkCard
 from typing import Union
 from PySide2.QtWidgets import QFrame, QLayout, QVBoxLayout
+import Core
 
 class GroupInfoPage(AppPage):
     def __init__(self, appWindow, parent: Union[QFrame, QLayout] = None):
@@ -12,20 +13,26 @@ class GroupInfoPage(AppPage):
         groupInfoLayout = QVBoxLayout()
         groupInfoLayout.setContentsMargins(5,5,5,5)
         groupInfoLayout.setSpacing(5)
-        groupInfoLayout.addWidget(AppCardButton(title='CHAN Tai Ming 1155159003', height=100,
-                                                text="Computer Science - Year3"))
-        groupInfoLayout.addWidget(AppCardButton(title='DAI Ruyi 1155173812', height=100))
-        groupInfoLayout.addWidget(AppCardButton(title='NING Chenyu 1155177065', height=100))
-        groupInfoLayout.addWidget(AppCardButton(title='YUE Haoyuan 1155157271', height=100))
 
+        card1 = AppCardButton(title='DAI Ruyi 1155173812', height=110)
+        card2 = AppCardButton(title='NING Chenyu 1155177065', height=110)
+        card3 = AppCardButton(title='YUE Haoyuan 1155157271', height=110)
+        card4 = AppCardButton(title='CHAN Tai Ming 1155159003', height=110,text="Computer Science - Year3",
+                              icon=appManager.getUIImagePath("ctm_icon.png"))
+        groupInfoLayout.addWidget(card1)
+        groupInfoLayout.addWidget(card2)
+        groupInfoLayout.addWidget(card3)
+        groupInfoLayout.addWidget(card4)
         self.addComponent(groupInfoLayout)
 
         self.addSpace(20)
         self.addComponent(AppHyperlinkCard(title=AutoTranslateWord("github repo"),
                                            url="https://github.com/ShinoKana/Music-Player",
-                                           iconPath=appManager.getDefaultUIIconPath('Link'),
+                                           iconPath=appManager.getDefaultUIIconPath(Core.Default_UI_Icon.Link),
                                            text=AutoTranslateWord("click to open"),
                                            content=AutoTranslateWord("Check out our github repo!")))
 
     def onSwitchIn(self):
+        pass
+    def onSwitchOut(self):
         pass

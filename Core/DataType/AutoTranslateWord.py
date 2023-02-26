@@ -30,9 +30,10 @@ class AutoTranslateWordList(list):
     def __init__(self, *args):
         if len(args) == 1 and (isinstance(args[0], list) or isinstance(args[0], tuple)):
             super().__init__([Core.appManager.translate(text) for text in args[0]])
+            self.__rawTextList = list(args[0])
         else:
-            super().__init__([Core.appManager.translate(text) for text in list(args)])
-        self.__rawTextList = list(args)
+            super().__init__([Core.appManager.translate(text) for text in args])
+            self.__rawTextList = list(args)
     @property
     def rawTextList(self) -> List[str]:
         return self.__rawTextList

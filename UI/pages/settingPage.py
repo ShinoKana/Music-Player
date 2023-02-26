@@ -1,11 +1,12 @@
 from PySide2.QtCore import Signal
 from PySide2.QtWidgets import QLayout, QFrame
+
+import Core
 from components import (AppSettingCardGroup, AppSwitchSettingCard,
-                        AppButtonSettingCard, AppColorSettingCard, AppOptionsSettingCard)
+                        AppColorSettingCard, AppOptionsSettingCard)
 from Core.DataType import AutoTranslateWord, AutoTranslateWordList
 from Core import appManager
 from .AppPage import AppPage
-import time
 from typing import Union
 
 class SettingPage(AppPage):
@@ -17,22 +18,23 @@ class SettingPage(AppPage):
 
     def __init__(self, appWindow:'AppWindow', parent: Union[QFrame, QLayout] = None):
         super().__init__(appWindow=appWindow, parent=parent, titleText=AutoTranslateWord("settings"))
+
         appManager.config.appRestartSig.connect(self.__showRestartTooltip)
 
         # region System setting
         self.systemGroup = AppSettingCardGroup(AutoTranslateWord("System"), self.scrollWidget)
-        self.themeCard = AppOptionsSettingCard(iconPath=appManager.getDefaultUIIconPath("Brush"),
+        self.themeCard = AppOptionsSettingCard(iconPath=appManager.getDefaultUIIconPath(Core.Default_UI_Icon.Brush),
                                             configItem=appManager.config.themeModeConfig,
                                             title=AutoTranslateWord("Theme"),
                                             content=AutoTranslateWord("app color theme"),
                                             texts=AutoTranslateWordList('Light', 'Dark', 'Use system setting'),
                                             parent=self.systemGroup)
-        self.componentLightColorCard = AppColorSettingCard(iconPath=appManager.getDefaultUIIconPath('Palette'),
+        self.componentLightColorCard = AppColorSettingCard(iconPath=appManager.getDefaultUIIconPath(Core.Default_UI_Icon.Palette),
                                                         title=AutoTranslateWord("Component (Light Mode) Color"),
                                                         content=AutoTranslateWord("Set the color of component when app is in light mode"),
                                                         parent=self.systemGroup,
                                                         configItem=appManager.config.componentLightColorConfig)
-        self.componentDarkColorCard = AppColorSettingCard(iconPath=appManager.getDefaultUIIconPath('Palette'),
+        self.componentDarkColorCard = AppColorSettingCard(iconPath=appManager.getDefaultUIIconPath(Core.Default_UI_Icon.Palette),
                                                        title=AutoTranslateWord("Component (Dark Mode) Color"),
                                                        content=AutoTranslateWord("Set the color of component bar when app is in dark mode"),
                                                        parent=self.systemGroup,
@@ -71,6 +73,8 @@ class SettingPage(AppPage):
 
         #endregion
     def onSwitchIn(self):
+        pass
+    def onSwitchOut(self):
         pass
     def __showRestartTooltip(self):
         self.appWindow.toast(title=AutoTranslateWord('Configuration updated successfully').getTranslation(appManager.config.currentLanguage),

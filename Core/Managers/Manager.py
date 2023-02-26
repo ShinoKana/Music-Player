@@ -51,16 +51,25 @@ def StaticMacFunction(func):
     return staticmethod(OSfunction(OSType.mac, func))
 
 class Manager:
-    __inited = []
+    _inited = []
+    _delMethods = []
     def __new__(cls, targetClass):
         if not isinstance(targetClass, type):
             raise TypeError("Manager can only be used on class")
-        if targetClass.__qualname__ in Manager.__inited:
+        if targetClass in Manager._inited:
             return targetClass
         else:
-            targetClass._instance =  targetClass.__call__()
-            Manager.__inited.append(targetClass.__qualname__)
+            targetClass._instance = targetClass.__call__()
+            Manager._inited.append(targetClass)
             targetClass.__init__ = lambda *args: None
             targetClass.__call__ = lambda *args: targetClass._instance
             targetClass.__new__ = lambda *args: targetClass._instance
+            if hasattr(targetClass._instance, "__del__"):
+                Manager._delMethods.insert(0, targetClass._instance.__del__)
+                targetClass._instance.__del__ = lambda *args: None
             return targetClass
+    @staticmethod
+    def OnAppEnd():
+        for delMethod in Manager._delMethods[::-1]:
+            delMethod()
+

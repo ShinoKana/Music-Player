@@ -13,7 +13,8 @@ SearchBarClass = Union[AppWidgetHintClass, QWidget, 'AppSearchBar']
 
 class AppSearchBar(AppWidget(QWidget)):
     def __init__(self:SearchBarClass, titleText:str=None, titleTextSize:int=None, searchButtonText:str=None, searchButtonTextSize:int=None,
-                 hintText:str=None, hintTextSize:int=None, searchCommand:Callable[[str],any]=None, height:int=40, **kwargs):
+                 hintText:str=None, hintTextSize:int=None, searchCommand:Callable[[str],any]=None, onCancelButtonClicked:Callable[[],any]=None,
+                 height:int=40, **kwargs):
         super().__init__(height=height, **kwargs)
 
         self.hBoxLayout = QHBoxLayout(self)
@@ -33,6 +34,14 @@ class AppSearchBar(AppWidget(QWidget)):
         self.SetHintText = self.inputArea.SetHintText #copy the setHintText method
         self.SetHintTextSize = self.inputArea.SetFontSize #copy the setFontSize method
         self.hBoxLayout.addWidget(self.inputArea)
+
+        self.cancelButton = AppButton(icon=appManager.getUIImagePath('cross.png'), height=int(height * 0.8),
+                                      parent=self)
+        self.cancelButton.clicked.connect(self.inputArea.clear)
+        self.cancelButton.setFixedWidth(int(height * 0.8))
+        if onCancelButtonClicked is not None:
+            self.cancelButton.clicked.connect(onCancelButtonClicked)
+        self.hBoxLayout.addWidget(self.cancelButton)
 
         self.searchButton = AppButton(text=searchButtonText, icon=appManager.getUIImagePath('small_search.png'),
                                       height=int(height*0.8), backgroundColor=QColor('white') if appManager.config.isLightTheme() else self.backgroundColor.lighter(),
@@ -54,7 +63,7 @@ class AppSearchBar(AppWidget(QWidget)):
 class AppSearchBar_WithDropDown(AppWidget(QWidget)):
     def __init__(self:SearchBarClass, titleText:str=None, titleTextSize:int=12, searchButtonText:str=None, hintText:str=None, hintTextSize:int=12,
                  searchCommand:Callable[[str],any]=None, searchButtonTextSize:int=12, dropdownChoices:Union[AutoTranslateWordList,Sequence[Union[AutoTranslateWord,str]]]=None,
-                 onDropdownChanged:Callable[[str],any]=None, height:int=40, **kwargs):
+                 onDropdownChanged:Callable[[str],any]=None, onCancelButtonClicked:Callable[[],any]=None, height:int=40, **kwargs):
         super().__init__(height=height, **kwargs)
 
         self.hBoxLayout = QHBoxLayout(self)
@@ -86,6 +95,13 @@ class AppSearchBar_WithDropDown(AppWidget(QWidget)):
         self.SetHintText = self.inputArea.SetHintText  # copy the setHintText method
         self.SetHintTextSize = self.inputArea.SetFontSize  # copy the setFontSize method
         self.hBoxLayout.addWidget(self.inputArea)
+
+        self.cancelButton = AppButton(icon=appManager.getUIImagePath('cross.png'),height=int(height * 0.8),parent=self)
+        self.cancelButton.clicked.connect(self.inputArea.clear)
+        self.cancelButton.setFixedWidth(int(height * 0.8))
+        if onCancelButtonClicked is not None:
+            self.cancelButton.clicked.connect(onCancelButtonClicked)
+        self.hBoxLayout.addWidget(self.cancelButton)
 
         self.searchButton = AppButton(text=searchButtonText, icon=appManager.getUIImagePath('small_search.png'),
                                       height=int(height * 0.8), fontSize=searchButtonTextSize, backgroundColor=QColor('white') if appManager.config.isLightTheme() else self.backgroundColor.lighter())

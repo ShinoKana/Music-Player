@@ -44,7 +44,7 @@ class MainWindow(AppWindow):
         #navigation bar
         self.addNavBarSwitchPageButton(AutoTranslateWord("Home"), appManager.getUIImagePath("home.png"), self.homePage)
         self.addNavBarSwitchPageButton(AutoTranslateWord("Player"), appManager.getUIImagePath("stop.png"), self.playerPage)
-        self.addNavBarSwitchPageButton(AutoTranslateWord("SongList"), appManager.getUIImagePath("3bar.png"), self.songListPage)
+        self.addNavBarSwitchPageButton(AutoTranslateWord("Song Library"), appManager.getUIImagePath("3bar.png"), self.songListPage)
         self.addNavBarSwitchPageButton(AutoTranslateWord("Setting"), appManager.getUIImagePath("gear.png"), self.settingPage)
         self.addNavBarSwitchPageButton(AutoTranslateWord("GroupInfo"), appManager.getUIImagePath("user.png"), self.groupInfoPage)
 

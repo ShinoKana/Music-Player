@@ -51,7 +51,7 @@ class AppWindow(FramelessWindow):
         super().__init__(parent=None)
 
         palette = self.palette()
-        palette.setColor(self.backgroundRole(), QColor('transparent'))
+        palette.setColor(self.backgroundRole(), QColor('black'))
         self.setPalette(palette)
 
         self.__QApp = QApp
@@ -208,6 +208,8 @@ class AppWindow(FramelessWindow):
     def switchPage(self, page: AppPage):
         if page == self.currentPage:
             return
+        if self.currentPage is not None:
+            self.currentPage.onSwitchOut()
         self.currentPage = page
         self.pageStackWidget.setCurrentWidget(page)
         page.onSwitchIn()

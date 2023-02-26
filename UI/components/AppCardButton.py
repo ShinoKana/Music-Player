@@ -41,8 +41,9 @@ class AppCardButton(AppWidget(StyledButton)):
 
         if command:
             self.addCommand(command)
-
         self.adjustSize()
+        if self._icon is not None:
+            self._icon.setFixedSize(self.size().height()*0.9, self.size().height()*0.9)
     @property
     def title(self) -> AppTextLabel:
         return self.titleLabel.text

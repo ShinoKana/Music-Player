@@ -1,0 +1,11 @@
+{
+    "music": {
+        "lastSong": "",
+        "lastSongList": "allSong",
+        "lastSongTime": 0,
+        "playMode": "listLoop"
+    },
+    "system": {
+        "soundVolume": 100
+    }
+}

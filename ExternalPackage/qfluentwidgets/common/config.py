@@ -128,7 +128,6 @@ class ColorSerializer(ConfigSerializer):
 
 class ConfigItem:
     """ Config item """
-
     def __init__(self, group: str, name: str, default, validator: ConfigValidator = None,
                  serializer: ConfigSerializer = None, restart=False):
         """
@@ -159,21 +158,17 @@ class ConfigItem:
         self.__value = default
         self.value = default
         self.restart = restart
-
     @property
     def value(self):
         """ getTranslation the value of config item """
         return self.__value
-
     @value.setter
     def value(self, v):
         self.__value = self.validator.correct(v)
-
     @property
     def key(self):
         """ getTranslation the config key separated by `.` """
         return self.group+"."+self.name if self.name else self.group
-
     def __str__(self) -> str:
         return f'{self.__class__.__name__}[value={self.value}]'
 
