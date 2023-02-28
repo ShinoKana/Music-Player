@@ -218,6 +218,8 @@ class AppUploadFileArea(AppWidget(DragDropFile)):
 UploadFileArea_WithFileBox_Hint = Union['AppUploadFileArea_WithFileBox', AppWidgetHintClass, QWidget]
 class AppUploadFileArea_WithFileBox(AppWidget(QWidget)):
     _uploadButtonCommands:List[Callable[[Sequence[FileInfo]],any]] = []
+    _fileBoxShowsType:bool = True
+    _fileBoxShowsSize:bool = True
     def __init__(self: UploadFileArea_WithFileBox_Hint, hintText:str=None, fontSize=16, onFileAdded:Callable[[FileInfo],any]=None,
                  allowMultiFile:bool=True, fontColor:Union[str,QColor]=None, onClick:Callable[[],any]=None, height:int=225,
                  onlyAcceptFiles:tuple=(), clickAddFileHintText:str=None, fileListBoxTitleText:str=None, uploadButtonCommand:Callable[[Sequence[FileInfo]],any]=None,
@@ -265,8 +267,8 @@ class AppUploadFileArea_WithFileBox(AppWidget(QWidget)):
             else:
                 pathStr = pathStr.rjust(40)
             itemBox.addText(pathStr, stretch=1)
-            itemBox.addText(fileInfo.fileType.name, stretch=0)
-            itemBox.addText(fileInfo.fileSize_withUnit(), stretch=0)
+            itemBox.addText(str(fileInfo.fileType.name).ljust(10), stretch=0) if self.fileBoxShowsType else None
+            itemBox.addText(fileInfo.fileSize_withUnit().ljust(10), stretch=0) if self.fileBoxShowsSize else None
             itemBox.addButton(AutoTranslateWord('delete'), appManager.getUIImagePath('cross.png'), command= lambda: self.removeFile(fileInfo), stretch=0)
             itemBox.adjustSize()
             self.fileListBox.addComponent(itemBox)
@@ -322,7 +324,18 @@ class AppUploadFileArea_WithFileBox(AppWidget(QWidget)):
         self._uploadButtonCommands.append(func) if func not in self._uploadButtonCommands else None
     def removeUploadButtonCommand(self, func:Callable[[Sequence[FileInfo]],any]):
         self._uploadButtonCommands.remove(func)
-
+    @property
+    def fileBoxShowsType(self):
+        return self._fileBoxShowsType
+    @fileBoxShowsType.setter
+    def fileBoxShowsType(self, value:bool):
+        self._fileBoxShowsType = value
+    @property
+    def fileBoxShowsSize(self):
+        return self._fileBoxShowsSize
+    @fileBoxShowsSize.setter
+    def fileBoxShowsSize(self, value:bool):
+        self._fileBoxShowsSize = value
 
 
 

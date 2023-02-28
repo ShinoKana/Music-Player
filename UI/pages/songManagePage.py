@@ -13,6 +13,7 @@ class SongManagePage(AppPage):
 
         self.uploadArea = AppUploadFileArea_WithFileBox(appWindow=self.appWindow, hintText=AutoTranslateWord("Drag or click to add your song here"),
                                                    onlyAcceptFiles=tuple(FileType.AUDIO.value))
+        self.uploadArea.fileBoxShowsType = False
         def uploadMusicFiles(files: Sequence[FileInfo]):
             addedMusic = False
             for fileinfo in files:
