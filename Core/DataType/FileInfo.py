@@ -25,8 +25,6 @@ class FileType(AutoTranslateEnum):
         return FileType.OTHER
 
 class FileInfo:
-    '''file info, for files that not in database.
-        Usually used for uploading files to database'''
     _filePath: str = None
     _fileContent: bytes = None
     _fileName: str = None #with extension
@@ -37,49 +35,111 @@ class FileInfo:
     _fileIcon: QIcon = None
     _fileHash: str = None
     @classmethod
-    def FromFilePath(cls, filePath: str, readContent: bool = False) -> 'FileInfo':
+    def FromFileHash(cls, fileHash:str, readContent:bool=False, filePath:str=None,
+                     fileName:str=None, fileType:FileType=None, fileIcon:QIcon=None,
+                     filesize:int=None) -> 'FileInfo':
+        self = cls()
+        self._fileHash = fileHash
+        self._filePath = filePath if filePath else Core.localDataManager.expectedPathByHash(fileHash)
+        self._fileContent = open(self._filePath, 'rb').read() if readContent else None
+        self._fileName = fileName if fileName else os.path.basename(self._filePath)
+        self._pureFileName = os.path.splitext(self._fileName)[0]
+        self._extension = os.path.splitext(self._fileName)[-1][1:]
+        self._fileSize = filesize if filesize else os.path.getsize(self._filePath)
+
+        if fileType:
+            self._fileType = fileType
+        else:
+            if self._extension != '':
+                self._fileType = FileType.GetFileTypeByExtension(self._extension)
+            else:
+                guseeType = guess_type(self.filePath)[0]
+                if guseeType:
+                    if guseeType.startswith('images'):
+                        self._fileType = FileType.IMG
+                    elif guseeType.startswith('video'):
+                        self._fileType = FileType.VIDEO
+                    elif guseeType.startswith('audio'):
+                        self._fileType = FileType.AUDIO
+                    elif guseeType.startswith('text'):
+                        self._fileType = FileType.TXT
+                    else:
+                        self._fileType = FileType.OTHER
+                else:
+                    self._fileType = FileType.OTHER
+        if fileIcon:
+            self._fileIcon = fileIcon
+        else:
+            if self._fileType == FileType.DOC:
+                self._fileIcon = QIcon(Core.appManager.getUIImagePath("docx.png"))
+            elif self._fileType == FileType.TXT:
+                self._fileIcon = QIcon(Core.appManager.getUIImagePath("txt.png"))
+            elif self._fileType == FileType.PDF:
+                self._fileIcon = QIcon(Core.appManager.getUIImagePath("pdf.png"))
+            elif self._fileType == FileType.IMG:
+                self._fileIcon = QIcon(Core.appManager.getUIImagePath("jpg.png"))
+            elif self._fileType == FileType.VIDEO:
+                self._fileIcon = QIcon(Core.appManager.getUIImagePath("mov.png"))
+            elif self._fileType == FileType.AUDIO:
+                self._fileIcon = QIcon(Core.appManager.getUIImagePath("audio.png"))
+            else:
+                self._fileIcon = QIcon(Core.appManager.getUIImagePath("unknown.png"))
+        return self
+
+    @classmethod
+    def FromFilePath(cls, filePath: str, readContent: bool = False, fileHash:str=None,
+                     filename:str=None, fileType:FileType=None, fileIcon:QIcon=None,
+                     filesize:int=None) -> 'FileInfo':
         if not os.path.exists(filePath):
             raise FileNotFoundError(f"File not found: {filePath}")
         self = cls()
         self._filePath= filePath
         self._fileContent= open(filePath, 'rb').read() if readContent else None
-        self._fileName= os.path.basename(filePath)
+        self._fileName= filename if filename else os.path.basename(filePath)
         self._pureFileName = os.path.splitext(self._fileName)[0]
         self._extension= os.path.splitext(self._fileName)[-1][1:]
-        self._fileSize= os.path.getsize(self._filePath)
+        self._fileSize= filesize if filesize else os.path.getsize(self._filePath)
+        self._fileHash= fileHash if fileHash else None
 
-        if self._extension != '':
-            self._fileType = FileType.GetFileTypeByExtension(self._extension)
+        if fileType:
+            self._fileType = fileType
         else:
-            guseeType = guess_type(self.filePath)[0]
-            if guseeType:
-                if guseeType.startswith('images'):
-                    self._fileType = FileType.IMG
-                elif guseeType.startswith('video'):
-                    self._fileType = FileType.VIDEO
-                elif guseeType.startswith('audio'):
-                    self._fileType = FileType.AUDIO
-                elif guseeType.startswith('text'):
-                    self._fileType = FileType.TXT
+            if self._extension != '':
+                self._fileType = FileType.GetFileTypeByExtension(self._extension)
+            else:
+                guseeType = guess_type(self.filePath)[0]
+                if guseeType:
+                    if guseeType.startswith('images'):
+                        self._fileType = FileType.IMG
+                    elif guseeType.startswith('video'):
+                        self._fileType = FileType.VIDEO
+                    elif guseeType.startswith('audio'):
+                        self._fileType = FileType.AUDIO
+                    elif guseeType.startswith('text'):
+                        self._fileType = FileType.TXT
+                    else:
+                        self._fileType = FileType.OTHER
                 else:
                     self._fileType = FileType.OTHER
-            else:
-                self._fileType = FileType.OTHER
 
-        if self._fileType == FileType.DOC:
-            self._fileIcon = QIcon(Core.appManager.getUIImagePath("docx.png"))
-        elif self._fileType == FileType.TXT:
-            self._fileIcon = QIcon(Core.appManager.getUIImagePath("txt.png"))
-        elif self._fileType == FileType.PDF:
-            self._fileIcon = QIcon(Core.appManager.getUIImagePath("pdf.png"))
-        elif self._fileType == FileType.IMG:
-            self._fileIcon = QIcon(Core.appManager.getUIImagePath("jpg.png"))
-        elif self._fileType == FileType.VIDEO:
-            self._fileIcon = QIcon(Core.appManager.getUIImagePath("mov.png"))
-        elif self._fileType == FileType.AUDIO:
-            self._fileIcon = QIcon(Core.appManager.getUIImagePath("audio.png"))
+        if fileIcon:
+            self._fileIcon = fileIcon
         else:
-            self._fileIcon = QIcon(Core.appManager.getUIImagePath("unknown.png"))
+            if self._fileType == FileType.DOC:
+                self._fileIcon = QIcon(Core.appManager.getUIImagePath("docx.png"))
+            elif self._fileType == FileType.TXT:
+                self._fileIcon = QIcon(Core.appManager.getUIImagePath("txt.png"))
+            elif self._fileType == FileType.PDF:
+                self._fileIcon = QIcon(Core.appManager.getUIImagePath("pdf.png"))
+            elif self._fileType == FileType.IMG:
+                self._fileIcon = QIcon(Core.appManager.getUIImagePath("jpg.png"))
+            elif self._fileType == FileType.VIDEO:
+                self._fileIcon = QIcon(Core.appManager.getUIImagePath("mov.png"))
+            elif self._fileType == FileType.AUDIO:
+                self._fileIcon = QIcon(Core.appManager.getUIImagePath("audio.png"))
+            else:
+                self._fileIcon = QIcon(Core.appManager.getUIImagePath("unknown.png"))
+
         return self
     def readFile(self) -> bytes:
         self._fileContent = open(self._filePath, 'rb').read()

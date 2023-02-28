@@ -90,6 +90,9 @@ class AppScrollBox(AppWidget(ScrollArea)):
         component.setParent(None)
         self.__components.remove(component)
         component.deleteLater()
+    def removeAllComponents(self:ScrollBoxHint):
+        for component in self.components:
+            self.removeComponent(component)
     def adjustScrollAreaSize(self):
         self.scrollWidget.adjustSize()
         self.scrollWidget.resize(self.scrollWidget.size())

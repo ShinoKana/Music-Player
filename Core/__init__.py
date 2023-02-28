@@ -2,4 +2,5 @@ from Managers.Manager import Manager, OSType, OSfunction, WinFunction, StaticWin
 from Managers.AppManager import Default_UI_Icon, AppManager, appManager
 from Managers.LocalDataManager import LocalDataManager, localDataManager
 from Managers.MusicPlayerManager import MusicPlayerManager, musicPlayerManager
+from Managers.MusicDataManager import MusicDataManager, musicDataManager
 from DataType import *

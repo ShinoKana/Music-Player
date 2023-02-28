@@ -1,4 +1,3 @@
-from ExternalPackage.pyqt5Custom import DragDropFile
 from .AppWidget import AppWidget, AppWidgetHintClass
 from .AppButton import AppButton
 from .AppScrollBox import AppScrollBox
@@ -6,10 +5,75 @@ from .AppLayoutBox import AppLayoutBox
 from Core.DataType import AutoTranslateWord, FileInfo
 from Core import appManager
 from typing import Callable, Union, List, Dict, Sequence
-from PySide2.QtGui import QColor
-from PySide2.QtCore import Qt, Signal
-from PySide2.QtWidgets import QVBoxLayout, QWidget, QFileDialog
 import re
+
+from PySide2.QtCore    import Qt, Signal
+from PySide2.QtWidgets import QWidget, QVBoxLayout, QLabel,QFileDialog
+from PySide2.QtGui     import QColor, QPainter, QPen, QBrush, QDropEvent
+from ExternalPackage import ImageBox
+
+
+class DragDropFile(QWidget):
+    fileDropped = Signal(FileInfo)
+    def __init__(self, parent=None):
+        super().__init__(parent=parent)
+
+        self.setAcceptDrops(True)
+        self.setMinimumSize(120, 65)
+        self.thisBorderColor = QColor(190, 190, 190)
+        self.hoverBackground = QColor(245, 245, 250)
+        self.thisBorderRadius = 26
+        self.thisBorderWidth = 6
+        self.layout = QVBoxLayout()
+        self.setLayout(self.layout)
+
+        self.title_lbl = QLabel()
+        self.addIcon = ImageBox(appManager.getUIImagePath("plus.png"))
+
+        self.layout.addWidget(self.title_lbl, alignment=Qt.AlignCenter)
+        self.layout.addSpacing(7)
+        self.layout.addWidget(self.addIcon, alignment=Qt.AlignCenter)
+
+        self.dragEnter = False
+
+        self.file = None
+
+    def setTitle(self, title):
+        self.title_lbl.setText(title)
+    def dragEnterEvent(self, event):
+        if event.mimeData().hasUrls():
+            self.dragEnter = True
+            event.accept()
+            self.repaint()
+        else:
+            event.ignore()
+
+    def dragLeaveEvent(self, event):
+        self.dragEnter = False
+        self.repaint()
+    def dropEvent(self, event:QDropEvent):
+        for url in event.mimeData().urls():
+            file = FileInfo.FromFilePath(url.toLocalFile())
+            self.fileDropped.emit(file)
+
+        self.dragEnter = False
+        self.repaint()
+    def paintEvent(self, event):
+        pt = QPainter()
+        pt.begin(self)
+        pt.setRenderHint(QPainter.Antialiasing, on=True)
+
+        pen = QPen(self.thisBorderColor, self.thisBorderWidth, Qt.DotLine, Qt.RoundCap)
+        pt.setPen(pen)
+
+        if self.dragEnter:
+            brush = QBrush(self.hoverBackground)
+            pt.setBrush(brush)
+
+        pt.drawRoundedRect(self.thisBorderWidth, self.thisBorderWidth, self.width()-self.thisBorderWidth*2, self.height()-self.thisBorderWidth*2, self.thisBorderRadius, self.thisBorderRadius)
+
+        pt.end()
+
 
 UploadFileAreaHint = Union['AppUploadFileArea', AppWidgetHintClass, DragDropFile]
 class AppUploadFileArea(AppWidget(DragDropFile)):
@@ -47,8 +111,19 @@ class AppUploadFileArea(AppWidget(DragDropFile)):
         else:
             self.SetFontColor('black' if appManager.config.isLightTheme() else 'white')
 
+        def checkAcceptType(fileInfo:FileInfo):
+            if onlyAcceptFiles and len(onlyAcceptFiles) > 0:
+                for fileType in fileInfo.fileType.value:
+                    if fileType in onlyAcceptFiles:
+                        return True
+                return False
+            return True
         def whenAddFile(fileInfo:FileInfo):
             if fileInfo in self.__currentFiles:
+                return
+            if not checkAcceptType(fileInfo):
+                if self.appWindow:
+                    self.appWindow.toast(AutoTranslateWord('File type not supported.'))
                 return
             if not self.allowMultiFile:
                 for file in self.__currentFiles:
@@ -63,7 +138,7 @@ class AppUploadFileArea(AppWidget(DragDropFile)):
         self.__onFileRemoved.append(onFileRemoved) if onFileRemoved else None
 
         clickAddFileHint = clickAddFileHintText if clickAddFileHintText else AutoTranslateWord('Select one or more files to open')
-        acceptFiles = ';;'.join([f'{fileType} {AutoTranslateWord("file")} (*.{fileType})' for fileType in onlyAcceptFiles]) if len(onlyAcceptFiles)>0 else 'All Files (*);;'
+        acceptFiles = 'All Files (*);;'+ ';;'.join([f'{fileType} {AutoTranslateWord("file")} (*.{fileType})' for fileType in onlyAcceptFiles]) if len(onlyAcceptFiles)>0 else 'All Files (*);;'
         def clickToAddFile():
             filepath = QFileDialog.getOpenFileNames(self, clickAddFileHint, '', acceptFiles)
             if len(filepath[0]) > 0:
@@ -142,6 +217,7 @@ class AppUploadFileArea(AppWidget(DragDropFile)):
 
 UploadFileArea_WithFileBox_Hint = Union['AppUploadFileArea_WithFileBox', AppWidgetHintClass, QWidget]
 class AppUploadFileArea_WithFileBox(AppWidget(QWidget)):
+    _uploadButtonCommands:List[Callable[[Sequence[FileInfo]],any]] = []
     def __init__(self: UploadFileArea_WithFileBox_Hint, hintText:str=None, fontSize=16, onFileAdded:Callable[[FileInfo],any]=None,
                  allowMultiFile:bool=True, fontColor:Union[str,QColor]=None, onClick:Callable[[],any]=None, height:int=225,
                  onlyAcceptFiles:tuple=(), clickAddFileHintText:str=None, fileListBoxTitleText:str=None, uploadButtonCommand:Callable[[Sequence[FileInfo]],any]=None,
@@ -153,7 +229,7 @@ class AppUploadFileArea_WithFileBox(AppWidget(QWidget)):
         self.vBoxLayout.setSpacing(3)
 
         #upload file area
-        self.uploadFileArea:UploadFileAreaHint = AppUploadFileArea(hintText=hintText, onFileAdded=onFileAdded, fontSize=fontSize,
+        self.uploadFileArea:UploadFileAreaHint = AppUploadFileArea(appWindow=self.appWindow, parent=self.parent(), hintText=hintText, onFileAdded=onFileAdded, fontSize=fontSize,
                                                                    allowMultiFile=allowMultiFile, height=height, onClick=onClick,
                                                                    fontColor=fontColor, onlyAcceptFiles=onlyAcceptFiles, clickAddFileHintText=clickAddFileHintText,
                                                                    borderCornerRadius=borderCornerRadius)
@@ -171,36 +247,26 @@ class AppUploadFileArea_WithFileBox(AppWidget(QWidget)):
         self.removeEvent_onClick = self.uploadFileArea.removeEvent_onClick
         self.addEvent_onFileAdded = self.uploadFileArea.addEvent_onFileAdded
         self.removeEvent_onFileAdded = self.uploadFileArea.removeEvent_onFileAdded
-        originRemoveFileMethod = self.uploadFileArea.removeFile
-        def removeFileBoxFromListBox(fileInfo:FileInfo):
-            if fileInfo.filePath in self.__currentFileBoxes.keys():
-                self.fileListBox.removeComponent(self.__currentFileBoxes[fileInfo.filePath])
-                self.__currentFileBoxes[fileInfo.filePath].deleteLater()
-                self.__currentFileBoxes.pop(fileInfo.filePath)
-            if len(self.__currentFileBoxes) == 0:
-                self.fileListBox.hide()
-                self.uploadButton.hide()
-                self.resize(self.width(), self.uploadFileArea.height() + 20)
-        def removeFile(fileInfo:FileInfo):
-            '''override the function in AppUploadFileArea'''
-            if fileInfo in self.currentFiles:
-                originRemoveFileMethod(fileInfo)
-                removeFileBoxFromListBox(fileInfo)
-        self.uploadFileArea.removeFile = removeFile
-        self.removeFile = self.uploadFileArea.removeFile
         self.addEvent_onFileRemoved = self.uploadFileArea.addEvent_onFileRemoved
         self.removeEvent_onFileRemoved = self.uploadFileArea.removeEvent_onFileRemoved
         self.addEvent_onFileRemoved(onFileRemoved) if onFileRemoved is not None else None
         def addFileBoxToListBox(fileInfo:FileInfo):
             itemBox = AppLayoutBox(height=30, align='left', parent=self.fileListBox, fontBold=True)
             itemBox.addImage(fileInfo.fileIcon, stretch=0)
-            itemBox.addText(fileInfo.fileName, stretch=1)
+            _name = fileInfo.fileName
+            if len(_name) > 40:
+                _name = _name[:37] + '...'
+            else:
+                _name = _name.ljust(40)
+            itemBox.addText(_name, stretch=1)
             pathStr = fileInfo.filePath
             if len(pathStr) > 40:
                 pathStr = '...' + pathStr[-37:]
+            else:
+                pathStr = pathStr.rjust(40)
             itemBox.addText(pathStr, stretch=1)
-            itemBox.addText(fileInfo.fileType.name, stretch=1)
-            itemBox.addText(fileInfo.fileSize_withUnit(), stretch=1)
+            itemBox.addText(fileInfo.fileType.name, stretch=0)
+            itemBox.addText(fileInfo.fileSize_withUnit(), stretch=0)
             itemBox.addButton(AutoTranslateWord('delete'), appManager.getUIImagePath('cross.png'), command= lambda: self.removeFile(fileInfo), stretch=0)
             itemBox.adjustSize()
             self.fileListBox.addComponent(itemBox)
@@ -224,7 +290,13 @@ class AppUploadFileArea_WithFileBox(AppWidget(QWidget)):
         self.fileListBox.hide()
 
         #upload button
-        self.uploadButton = AppButton(text=AutoTranslateWord('upload'), parent=self,height=34, fontBold=True)
+        def uploadFiles():
+            try:
+                for func in self._uploadButtonCommands:
+                    func(self.currentFiles)
+            except Exception as e:
+                print("upload error, message:", e)
+        self.uploadButton = AppButton(text=AutoTranslateWord('upload'), parent=self,height=34, fontBold=True, command=uploadFiles)
         self.vBoxLayout.addWidget(self.uploadButton, alignment=Qt.AlignRight)
         self.uploadButton.hide()
         if uploadButtonCommand is not None:
@@ -232,10 +304,24 @@ class AppUploadFileArea_WithFileBox(AppWidget(QWidget)):
 
         self.adjustSize()
 
+    def removeFile(self, fileInfo: FileInfo):
+        def removeFileBoxFromListBox(fileInfo: FileInfo):
+            if fileInfo.filePath in self.__currentFileBoxes.keys():
+                self.fileListBox.removeComponent(self.__currentFileBoxes[fileInfo.filePath])
+                self.__currentFileBoxes[fileInfo.filePath].deleteLater()
+                self.__currentFileBoxes.pop(fileInfo.filePath)
+            if len(self.__currentFileBoxes) == 0:
+                self.fileListBox.hide()
+                self.uploadButton.hide()
+                self.resize(self.width(), self.uploadFileArea.height() + 20)
+        if fileInfo in self.currentFiles:
+            self.uploadFileArea.removeFile(fileInfo)
+            removeFileBoxFromListBox(fileInfo)
+
     def addUploadButtonCommand(self, func:Callable[[Sequence[FileInfo]],any]):
-        self.uploadButton.clicked.connect(func)
+        self._uploadButtonCommands.append(func) if func not in self._uploadButtonCommands else None
     def removeUploadButtonCommand(self, func:Callable[[Sequence[FileInfo]],any]):
-        self.uploadButton.clicked.disconnect(func)
+        self._uploadButtonCommands.remove(func)
 
 
 

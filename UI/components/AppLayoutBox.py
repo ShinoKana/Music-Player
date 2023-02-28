@@ -13,7 +13,7 @@ class AppLayoutBox(AppWidget(QWidget)):
                                   Tuple[Optional[str],Union[str,QPixmap,QIcon,None],Optional[Callable[[],any]]],
                                   Tuple[Union[QWidget, AppWidgetHintClass]]]]]=None,
                  align:Literal['left','right','top','bottom','center']='center', **kwargs):
-        super().__init__(height=height, width=width, **kwargs)
+        super().__init__(**kwargs)
         self.__align = None
         self.__components = []
         self.__direction = direction
@@ -23,13 +23,13 @@ class AppLayoutBox(AppWidget(QWidget)):
             self.layout = QHBoxLayout(self)
             self.layout.setContentsMargins(self.size().width() * 0.04, height * 0.2,
                                            self.size().width() * 0.04, height * 0.2)
-            self.layout.setSpacing(int(self.width() * 0.08))
+            self.layout.setSpacing(int(self.width() * 0.1))
         else:
             self.setMinimumWidth(width) if width else None
             self.layout = QVBoxLayout(self)
             self.layout.setContentsMargins(width * 0.1, self.size().height() * 0.04,
                                            width * 0.1, self.size().height() * 0.04)
-            self.layout.setSpacing(int(self.height() * 0.08))
+            self.layout.setSpacing(int(self.height() * 0.1))
         self.SetAlign(align)
         if contain:
             for item in contain:

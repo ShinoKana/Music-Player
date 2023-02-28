@@ -11,7 +11,7 @@ from .styledbutton import StyledButton
 from .segbtngroup  import SegmentedButtonGroup
 from .imagebox     import ImageBox
 from .colorpicker  import ColorPicker
-from .dragdropfile import DragDropFile
+#from .dragdropfile import DragDropFile
 from .embedwindow  import EmbedWindow
 from .codetextedit import CodeTextEdit
 from .titlebar     import TitleBar

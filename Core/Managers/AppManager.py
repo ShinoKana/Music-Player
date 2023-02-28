@@ -1,4 +1,5 @@
 import os, re, json
+from enum import Enum
 from typing import Dict, List
 from pathlib import Path
 
@@ -26,8 +27,7 @@ class NumberValidator(ConfigValidator):
         return 0
 
 from .Manager import *
-@Manager
-class ConfigManager(QConfig):
+class ConfigManager(QConfig, Manager):
     #system
     themeModeConfig = OptionsConfigItem("System", "ThemeMode", "Light", OptionsValidator(["Light", "Dark", "Auto"]), restart=True)
     componentLightColorConfig = ColorConfigItem("System", "ComponentLightColor", QColor(119, 176, 253), restart=True)
@@ -38,7 +38,7 @@ class ConfigManager(QConfig):
 
     def __init__(self):
         #translation
-        super().__init__()
+        QConfig.__init__(self)
         self._translationData = {}
         self._languages = []
         self._currentLanguage: int = 0
@@ -212,17 +212,17 @@ class AppRecord(QObject):
                     key = k + "." + key
                     if items.get(key) is not None:
                         items[key].deserializeFrom(value)
-@Manager
-class RecordManager(AppRecord):
+class RecordManager(AppRecord, Manager):
     #system
     soundVolume = RangeRecordItem("system", "soundVolume", 100, RangeValidator(0, 100))
     #music
     musicPlayMode = OptionsRecordItem("music", "playMode", "listLoop", OptionsValidator(["listLoop", "random", "singleLoop"]))
     lastSong = OptionsRecordItem("music", "lastSong", "", OptionsValidator([""]))
+    lastSongIndex = RecordItem("music", "lastSongIndex", 0, NumberValidator())
     lastSongList = OptionsRecordItem("music", "lastSongList", "allSong", OptionsValidator(["allSong"]))
-    lastSongTime = RangeRecordItem("music", "lastSongTime", 0, RangeValidator(0, 100000))
+    lastSongTime = RecordItem("music", "lastSongTime", 0, NumberValidator())
     def __init__(self):
-        super().__init__(APP_RECORD_PATH)
+        AppRecord.__init__(self, APP_RECORD_PATH)
         self._temperateRecord = None
         self.load()
     def __del__(self):
@@ -290,8 +290,7 @@ class Default_UI_Icon(Enum):
     MusicFolder = "Music_folder"
     BackgroundColor = "Background_color"
     FluorescentPen = "Fluorescent_pen"
-@Manager
-class AppManager:
+class AppManager(Manager):
     _config:ConfigManager = None
     _record:RecordManager = None
     def __init__(self):

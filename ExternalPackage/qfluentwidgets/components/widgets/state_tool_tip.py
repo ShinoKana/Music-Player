@@ -1,19 +1,16 @@
 # coding:utf-8
-'''from PyQt5.QtCore import QEasingCurve, QPropertyAnimation, Qt, QTimer, pyqtSignal, QSize, QPoint
-from PyQt5.QtGui import QPainter, QPixmap
-from PyQt5.QtWidgets import QLabel, QWidget, QToolButton, QGraphicsOpacityEffect'''
-from PySide2.QtCore import QEasingCurve, Property, Signal, QSize, QPoint,QPropertyAnimation, QTimer,Qt
-from PySide2.QtGui import QPainter, QPixmap
-from PySide2.QtWidgets import QLabel, QWidget, QToolButton, QGraphicsOpacityEffect
+from PySide2.QtCore import QEasingCurve, Signal, QSize, QPoint,QPropertyAnimation, QTimer,Qt
+from PySide2.QtGui import QPainter
+from PySide2.QtWidgets import QWidget, QToolButton, QGraphicsOpacityEffect
 
 from .label import PixmapLabel
 from ...common import setStyleSheet
 
+_toastCount = 0
 
 class StateToolTip(QWidget):
     """ State tooltip """
 
-    #closedSignal = pyqtSignal()
     closedSignal = Signal()
     def __init__(self, title, content, parent=None):
         """
@@ -242,26 +239,28 @@ class ToastToolTip(QWidget):
 
     def getSuitablePos(self):
         """ getTranslation suitable position in main window """
-        for i in range(10):
-            dy = i*(self.height() + 20)
-            pos = QPoint(self.window().width() - self.width() - 30, 63+dy)
-            widget = self.window().childAt(pos + QPoint(2, 2))
-            if isinstance(widget, (StateToolTip, ToastToolTip)):
-                pos += QPoint(0, self.height() + 20)
-            else:
-                break
-
+        global _toastCount
+        dy = _toastCount*(self.height() + 20)
+        pos = QPoint(self.window().width() - self.width() - 30, 63+dy)
+        pos += QPoint(0, self.height() + 20)
         return pos
 
     def showEvent(self, e):
         pos = self.getSuitablePos()
+        global _toastCount
+        _toastCount += 1
         self.slideAni.setDuration(350)
         self.slideAni.setEasingCurve(QEasingCurve.OutQuad)
         self.slideAni.setStartValue(QPoint(self.window().width(), pos.y()))
         self.slideAni.setEndValue(pos)
+        def minusToastCount():
+            global _toastCount
+            _toastCount -= 1 if _toastCount > 0 else 0
+        self.slideAni.finished.connect(minusToastCount)
         self.slideAni.start()
         super().showEvent(e)
         self.closeTimer.start()
+
     def adjustSize(self) -> None:
         self.titleLabel.adjustSize()
         self.contentLabel.adjustSize()

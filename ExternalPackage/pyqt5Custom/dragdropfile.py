@@ -2,42 +2,61 @@
 #                GPL 3.0 - Kadir Aksoy                #
 #   https://github.com/kadir014/pyqt5-custom-widgets  #
 
+
+import pathlib
+
 from PySide2.QtCore    import Qt, Signal
 from PySide2.QtWidgets import QWidget, QVBoxLayout, QLabel
-from PySide2.QtGui     import QColor, QPainter, QPen, QBrush, QDropEvent
-from .imagebox import ImageBox
-from Core.DataType import FileInfo
-import Core
+from PySide2.QtGui     import QColor, QPainter, QPen, QBrush
+
+
+
+class FileDetails:
+    def __init__(self, path, content):
+        self.path = path
+        self.content = content
+        self.size = len(self.content)
+
+        self._path = pathlib.Path(self.path)
+
+        self.name      = self._path.name
+        self.pureName  = self._path.stem
+        self.extension = self._path.suffix
+
+    def __repr__(self):
+        return f"<pyqt5Custom.FileDetails({self.name})>"
+
+
 
 class DragDropFile(QWidget):
 
-    fileDropped = Signal(FileInfo)
-    def __init__(self, parent=None):
-        super().__init__(parent=parent)
+    fileDropped = Signal(FileDetails)
+
+    def __init__(self):
+        super().__init__()
 
         self.setAcceptDrops(True)
 
         self.setMinimumSize(120, 65)
 
-        self.thisBorderColor = QColor(190, 190, 190)
+        self.borderColor = QColor(190, 190, 190)
         self.hoverBackground = QColor(245, 245, 250)
-        self.thisBorderRadius = 26
-        self.thisBorderWidth = 6
+        self.borderRadius = 26
+        self.borderWidth = 6
 
         self.layout = QVBoxLayout()
-        #self.layout.setAlignment(Qt.AlignCenter)
+        self.layout.setAlignment(Qt.AlignCenter)
         self.setLayout(self.layout)
 
-        #self.title_lbl = QLabel(AutoTranslateWord("Drop your file here!").getTranslation())
-        self.title_lbl = QLabel()
-        self.addIcon = ImageBox(Core.appManager.getUIImagePath("plus.png"))
+        self.title_lbl = QLabel("Drop your file here!")
+        self.filename_lbl = QLabel("")
 
-        self.layout.addWidget(self.title_lbl, alignment=Qt.AlignCenter)
+        self.layout.addWidget(self.title_lbl, alignment=Qt.AlignHCenter)
         self.layout.addSpacing(7)
-        self.layout.addWidget(self.addIcon, alignment=Qt.AlignCenter)
+        self.layout.addWidget(self.filename_lbl, alignment=Qt.AlignHCenter)
 
-        #self.title_lbl.setStyleSheet("font-size:19px;")
-        #self.filename_lbl.setStyleSheet("font-size:14px; color: #666666;")
+        self.title_lbl.setStyleSheet("font-size:19px;")
+        self.filename_lbl.setStyleSheet("font-size:14px; color: #666666;")
 
         self.dragEnter = False
 
@@ -58,10 +77,13 @@ class DragDropFile(QWidget):
         self.dragEnter = False
         self.repaint()
 
-    def dropEvent(self, event:QDropEvent):
-        for url in event.mimeData().urls():
-            file = FileInfo.FromFilePath(url.toLocalFile())
-            self.fileDropped.emit(file)
+    def dropEvent(self, event):
+        mime = event.mimeData()
+        file = FileDetails(mime.urls()[0].toLocalFile(), mime.text())
+
+        self.filename_lbl.setText(file.name)
+
+        self.fileDropped.emit(file)
 
         self.dragEnter = False
         self.repaint()
@@ -71,13 +93,13 @@ class DragDropFile(QWidget):
         pt.begin(self)
         pt.setRenderHint(QPainter.Antialiasing, on=True)
 
-        pen = QPen(self.thisBorderColor, self.thisBorderWidth, Qt.DotLine, Qt.RoundCap)
+        pen = QPen(self.borderColor, self.borderWidth, Qt.DotLine, Qt.RoundCap)
         pt.setPen(pen)
 
         if self.dragEnter:
             brush = QBrush(self.hoverBackground)
             pt.setBrush(brush)
 
-        pt.drawRoundedRect(self.thisBorderWidth, self.thisBorderWidth, self.width()-self.thisBorderWidth*2, self.height()-self.thisBorderWidth*2, self.thisBorderRadius, self.thisBorderRadius)
+        pt.drawRoundedRect(self.borderWidth, self.borderWidth, self.width()-self.borderWidth*2, self.height()-self.borderWidth*2, self.borderRadius, self.borderRadius)
 
         pt.end()

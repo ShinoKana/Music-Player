@@ -263,15 +263,16 @@ class AppWindow(FramelessWindow):
     #endregion
 
     #region toast and loading
-    def toast(self, title: str="", content:str="", duration: float = 3, icon: Union[str,QIcon,QPixmap]=None):
+    def toast(self, title: str = "", content: str = "", duration: float = 5, icon: Union[str, QIcon, QPixmap] = None):
         t = ToastToolTip(parent=self.window(), title=title, content=content, duration=duration, icon=icon)
         fontColor = 'black' if appManager.config.isLightTheme() else 'white'
         borderColor = fontColor
+        #region style
         t.setStyleSheet(""" 
             QWidget {
-                background-color: """+ appManager.config.currentComponentColor().name() +""";
+                background-color: """ + appManager.config.currentComponentColor().name() + """;
                 border-radius: 10px;
-                border: 2px solid """+ borderColor +""";
+                border: 1px solid """ + borderColor + """;
             }
             #titleLabel {
                 color: """ + fontColor + """;
@@ -285,27 +286,26 @@ class AppWindow(FramelessWindow):
                 border-radius: 0px;
                 border: none;
             }
-            #closeButton {
-                background-color: """+ appManager.config.currentComponentColor().darker().name() +""";
-                border-radius: 5px;
+            QToolButton {
+                border: none;
                 margin: 0px;
                 width: 14px;
                 height: 14px;
-                border-images: url(:/qfluentwidgets/images/state_tool_tip/close_normal.png) top center no-repeat;
+                border-image: url(:/qfluentwidgets/images/state_tool_tip/close_normal.png) top center no-repeat;
             }
-            #closeButton:hover {
-                background-color: """+ appManager.config.currentComponentColor().lighter().name() +""";
-                border-images: url(:/qfluentwidgets/images/state_tool_tip/close_hover.png) top center no-repeat;
+            QToolButton:hover {
+                border-image: url(:/qfluentwidgets/images/state_tool_tip/close_hover.png) top center no-repeat;
             }
-            #closeButton:pressed {
-                background-color: """+ appManager.config.currentComponentColor().lighter(150).name() +""";
-                border-images: url(:/qfluentwidgets/images/state_tool_tip/close_hover.png) top center no-repeat;
+
+            QToolButton:pressed {
+                border-image: url(:/qfluentwidgets/images/state_tool_tip/close_hover.png) top center no-repeat;
             }
             #iconLabel {
-                background-color: """+ appManager.config.currentComponentColor().darker().name() +""";
+                background-color: """ + appManager.config.currentComponentColor().darker().name() + """;
             }
             """)
-        if content=="" or content is None:
+        #endregion
+        if content == "" or content is None:
             t.contentLabel.hide()
         t.adjustSize()
         t.show()

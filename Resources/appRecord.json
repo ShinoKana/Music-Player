@@ -1,6 +1,7 @@
 {
     "music": {
         "lastSong": "",
+        "lastSongIndex": 0,
         "lastSongList": "allSong",
         "lastSongTime": 0,
         "playMode": "listLoop"
