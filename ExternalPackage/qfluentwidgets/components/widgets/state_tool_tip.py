@@ -6,8 +6,6 @@ from PySide2.QtWidgets import QWidget, QToolButton, QGraphicsOpacityEffect
 from .label import PixmapLabel
 from ...common import setStyleSheet
 
-_toastCount = 0
-
 class StateToolTip(QWidget):
     """ State tooltip """
 
@@ -139,12 +137,13 @@ class StateToolTip(QWidget):
                                self.doneImage.height(), self.doneImage)
 
 
-from typing import Union
+from typing import Union, Callable
 from PySide2.QtGui import QIcon, QPixmap
 from PySide2.QtWidgets import QWidget, QLabel, QVBoxLayout, QHBoxLayout
 class ToastToolTip(QWidget):
     """ Toast tooltip """
-    def __init__(self, title: str, content: str, icon: Union[str,QIcon,QPixmap]=None, duration:float=2.5, parent=None):
+    def __init__(self, title: str, content: str, icon: Union[str,QIcon,QPixmap]=None, duration:float=2.5, parent=None,
+                 toastPosIndex:int=0, onFinished:Callable[[],any]=None):
         """
         Parameters
         ----------
@@ -162,6 +161,8 @@ class ToastToolTip(QWidget):
             parentLayout window
         """
         super().__init__(parent)
+        self._toastPosIndex = toastPosIndex
+        self._onFinishedCallback = onFinished
         self._thisTitle = title
         self._thisContent = content
         if icon is not None:
@@ -235,28 +236,22 @@ class ToastToolTip(QWidget):
         self.opacityAni.setStartValue(1)
         self.opacityAni.setEndValue(0)
         self.opacityAni.finished.connect(self.deleteLater)
+        self.opacityAni.finished.connect(self._onFinishedCallback)
         self.opacityAni.start()
 
     def getSuitablePos(self):
         """ getTranslation suitable position in main window """
-        global _toastCount
-        dy = _toastCount*(self.height() + 20)
+        dy = self._toastPosIndex * (self.height() + 20)
         pos = QPoint(self.window().width() - self.width() - 30, 63+dy)
         pos += QPoint(0, self.height() + 20)
         return pos
 
     def showEvent(self, e):
         pos = self.getSuitablePos()
-        global _toastCount
-        _toastCount += 1
         self.slideAni.setDuration(350)
         self.slideAni.setEasingCurve(QEasingCurve.OutQuad)
         self.slideAni.setStartValue(QPoint(self.window().width(), pos.y()))
         self.slideAni.setEndValue(pos)
-        def minusToastCount():
-            global _toastCount
-            _toastCount -= 1 if _toastCount > 0 else 0
-        self.slideAni.finished.connect(minusToastCount)
         self.slideAni.start()
         super().showEvent(e)
         self.closeTimer.start()

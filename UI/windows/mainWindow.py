@@ -1,9 +1,7 @@
 from PySide2.QtCore import QPropertyAnimation, QSize, QEasingCurve, QVariantAnimation
 from PySide2.QtWidgets import QVBoxLayout, QWidget
-
 from Core.DataType import AutoTranslateWord
-from Core import appManager
-
+from Core import appManager, musicPlayerManager
 from .AppWindow import AppWindow
 from pages import SettingPage, HomePage, PlayerPage, SongListPage, GroupInfoPage, SongManagePage
 from components import AppMusicBox, AppButton
@@ -16,7 +14,7 @@ class MainWindow(AppWindow):
 
         self.__isHiding = False
         #music box
-        self.musicBox = AppMusicBox(borderCornerRadius=0, backgroundColor=appManager.config.currentComponentColor_DarkerOrLighter())
+        self.musicBox = AppMusicBox(appWindow=self, mediaPlayer=musicPlayerManager, borderCornerRadius=0, backgroundColor=appManager.config.currentComponentColor_DarkerOrLighter())
         self.musicBox.setMaximumHeight(150)
         self.hideWindowButton = AppButton(parent=self, icon= appManager.getUIImagePath('miniToTray.png'),
                                           command=self.hideOrShowMainWindow, backgroundColor=appManager.config.currentComponentColor_DarkerOrLighter())

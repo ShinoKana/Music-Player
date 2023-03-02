@@ -7,7 +7,7 @@ from Core import appManager
 ButtonHint = Union[AppWidgetHintClass, StyledButton, 'AppButton']
 class AppButton(AppWidget(StyledButton)):
     def __init__(self:ButtonHint, height=40, fontSize=12, fontColor:Union[str,QColor]=None,
-                 text="", icon=None, command:Callable[[],any]=None, **kwargs):
+                 text="", icon:str=None, command:Callable[[],any]=None, **kwargs):
         super().__init__(height=height,text=text, icon=icon, **kwargs)
         self.conwdt.setStyleSheet("background-color:transparent;") # special treat for styled button
         self.__commands:List[Callable[[],any]] = []

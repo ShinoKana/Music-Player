@@ -1,5 +1,5 @@
 from PySide2.QtWidgets import QLabel, QWidget, QHBoxLayout, QVBoxLayout
-from PySide2.QtGui import QColor, QPixmap, QIcon
+from PySide2.QtGui import QColor, QPixmap, QIcon, QMouseEvent
 from PySide2.QtCore import Qt
 from .AppWidget import AppWidget, AppWidgetHintClass
 from typing import Union, Sequence, Tuple, Callable, Optional, Literal
@@ -8,12 +8,16 @@ from .AppButton import AppButton
 
 ItemBoxHint = Union[QWidget, AppWidgetHintClass, 'AppLayoutBox']
 class AppLayoutBox(AppWidget(QWidget)):
+
     def __init__(self: ItemBoxHint, height: int = 30, width=100, direction:Literal['Horizontal','Vertical']='Horizontal',
                  contain:Sequence[Tuple[Union[Tuple[str],Tuple[Union[QPixmap,QIcon]],
                                   Tuple[Optional[str],Union[str,QPixmap,QIcon,None],Optional[Callable[[],any]]],
                                   Tuple[Union[QWidget, AppWidgetHintClass]]]]]=None,
-                 align:Literal['left','right','top','bottom','center']='center', **kwargs):
+                 align:Literal['left','right','top','bottom','center']='center',
+                 onLeftClick:Callable[[],any]=None, onRightClick:Callable[[],any]=None, **kwargs):
         super().__init__(**kwargs)
+        self._onLeftClickCallback = []
+        self._onRightClickCallback = []
         self.__align = None
         self.__components = []
         self.__direction = direction
@@ -42,8 +46,27 @@ class AppLayoutBox(AppWidget(QWidget)):
                         self.addImage(item[0])
                 else:
                     self.addButton(*item)
-
+        if onLeftClick:
+            self._onLeftClickCallback.append(onLeftClick)
+        if onRightClick:
+            self._onRightClickCallback.append(onRightClick)
         self.adjustSize()
+    def mousePressEvent(self:ItemBoxHint, event:QMouseEvent):
+        # check if mouse position is in the button
+        if event.button() == Qt.LeftButton:
+            for callback in self._onLeftClickCallback:
+                callback()
+        elif event.button() == Qt.RightButton:
+            for callback in self._onRightClickCallback:
+                callback()
+    def addOnLeftClickCallback(self, callback:Callable[[],any]):
+        self._onLeftClickCallback.append(callback) if callback not in self._onLeftClickCallback else None
+    def removeOnLeftClickCallback(self, callback:Callable[[],any]):
+        self._onLeftClickCallback.remove(callback) if callback in self._onLeftClickCallback else None
+    def addOnRightClickCallback(self, callback:Callable[[],any]):
+        self._onRightClickCallback.append(callback) if callback not in self._onRightClickCallback else None
+    def removeOnRightClickCallback(self, callback:Callable[[],any]):
+        self._onRightClickCallback.remove(callback) if callback in self._onRightClickCallback else None
     @property
     def components(self) -> Sequence[Union[QLabel, AppTextLabel, AppButton, QWidget]]:
         return self.__components

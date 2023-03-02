@@ -1,8 +1,6 @@
 # coding:utf-8
 from typing import List
-'''from PyQt5.QtCore import QSize, QPoint, Qt, QEvent, QRect
-from PyQt5.QtGui import QResizeEvent
-from PyQt5.QtWidgets import QLayout, QLayoutItem, QWidget'''
+
 from PySide2.QtCore import QSize, QPoint, Qt, QEvent, QRect
 from PySide2.QtGui import QResizeEvent
 from PySide2.QtWidgets import QLayout, QLayoutItem, QWidget
@@ -12,35 +10,41 @@ class ExpandLayout(QLayout):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.__items = []   #type:List[QLayoutItem]
-        self.__widgets = [] #type:List[QWidget]
+        self._items = []   #type:List[QLayoutItem]
+        self._widgets = [] #type:List[QWidget]
+    @property
+    def allWidgets(self)->tuple:
+        return tuple(self._widgets)
     def removeWidget(self, widget: QWidget):
-        if widget in self.__widgets:
-            self.__widgets.remove(widget)
+        if widget in self._widgets:
+            self._widgets.remove(widget)
             super().removeWidget(widget)
     def addWidget(self, widget: QWidget):
-        if widget in self.__widgets:
+        if widget in self._widgets:
             return
-
-        self.__widgets.append(widget)
+        self._widgets.append(widget)
         widget.installEventFilter(self)
-
+    def insertWidget(self, index: int, widget: QWidget):
+        if widget in self._widgets:
+            return
+        self._widgets.insert(index, widget)
+        widget.installEventFilter(self)
     def addItem(self, item: QLayoutItem):
-        self.__items.append(item)
+        self._items.append(item)
 
     def count(self):
-        return len(self.__items)
+        return len(self._items)
 
     def itemAt(self, index: int):
-        if 0 <= index < len(self.__items):
-            return self.__items[index]
+        if 0 <= index < len(self._items):
+            return self._items[index]
 
         return None
 
     def takeAt(self, index: int):
-        if 0 <= index < len(self.__items):
-            self.__widgets.pop(index)
-            return self.__items.pop(index)
+        if 0 <= index < len(self._items):
+            self._widgets.pop(index)
+            return self._items.pop(index)
 
         return None
 
@@ -64,7 +68,7 @@ class ExpandLayout(QLayout):
     def minimumSize(self):
         size = QSize()
 
-        for w in self.__widgets:
+        for w in self._widgets:
             size = size.expandedTo(w.minimumSize())
 
         m = self.contentsMargins()
@@ -79,17 +83,15 @@ class ExpandLayout(QLayout):
         y = rect.y() + margin.top() + margin.bottom()
         width = rect.width() - margin.left() - margin.right()
 
-        for i, w in enumerate(self.__widgets):
+        for i, w in enumerate(self._widgets):
             y += (i>0)*self.spacing()
             if move:
                 w.setGeometry(QRect(QPoint(x, y), QSize(width, w.height())))
-
             y += w.height()
-
         return y - rect.y()
 
     def eventFilter(self, obj, e: QEvent) -> bool:
-        if obj in self.__widgets:
+        if obj in self._widgets:
             if e.type() == QEvent.Resize:
                 re = QResizeEvent(e.size(), e.oldSize())
                 ds = re.size() - re.oldSize()  # type:QSize

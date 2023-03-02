@@ -1,10 +1,10 @@
 {
     "music": {
-        "lastSong": "",
         "lastSongIndex": 0,
-        "lastSongList": "allSong",
+        "lastSongList": -1,
         "lastSongTime": 0,
-        "playMode": "listLoop"
+        "playMode": "listLoop",
+        "unfoldingSongList": "-1"
     },
     "system": {
         "soundVolume": 100

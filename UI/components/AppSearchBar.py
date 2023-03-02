@@ -12,6 +12,8 @@ from .AppDropDown import AppDropDown
 SearchBarClass = Union[AppWidgetHintClass, QWidget, 'AppSearchBar']
 
 class AppSearchBar(AppWidget(QWidget)):
+    _searchCommands = []
+    _onCancelCommands = []
     def __init__(self:SearchBarClass, titleText:str=None, titleTextSize:int=None, searchButtonText:str=None, searchButtonTextSize:int=None,
                  hintText:str=None, hintTextSize:int=None, searchCommand:Callable[[str],any]=None, onCancelButtonClicked:Callable[[],any]=None,
                  height:int=40, **kwargs):
@@ -40,7 +42,8 @@ class AppSearchBar(AppWidget(QWidget)):
         self.cancelButton.clicked.connect(self.inputArea.clear)
         self.cancelButton.setFixedWidth(int(height * 0.8))
         if onCancelButtonClicked is not None:
-            self.cancelButton.clicked.connect(onCancelButtonClicked)
+            self._onCancelCommands.append(onCancelButtonClicked)
+        self.cancelButton.clicked.connect(lambda: list(map(lambda x: x(), self._onCancelCommands)))
         self.hBoxLayout.addWidget(self.cancelButton)
 
         self.searchButton = AppButton(text=searchButtonText, icon=appManager.getUIImagePath('small_search.png'),
@@ -52,17 +55,29 @@ class AppSearchBar(AppWidget(QWidget)):
         self.hBoxLayout.addWidget(self.searchButton)
 
         if searchCommand is not None:
-            self.searchButton.clicked.connect(lambda:searchCommand(self.inputArea.text()))
+            self._searchCommands.append(searchCommand)
+
+        self.searchButton.clicked.connect(lambda: list(map(lambda x: x(self.inputArea.text()), self._searchCommands)))
 
         self.hBoxLayout.setStretch(0, 1)
         self.hBoxLayout.setStretch(1, 8)
         self.hBoxLayout.setStretch(2, 1)
 
         self.adjustSize()
+    def addSearchCommand(self, searchCommand:Callable[[str],any]):
+        self._searchCommands.append(searchCommand) if searchCommand not in self._searchCommands else None
+    def removeSearchCommand(self, searchCommand:Callable[[str],any]):
+        self._searchCommands.remove(searchCommand)
+    def addOnCancelCommand(self, onCancelCommand:Callable[[],any]):
+        self._onCancelCommands.append(onCancelCommand) if onCancelCommand not in self._onCancelCommands else None
+    def removeOnCancelCommand(self, onCancelCommand:Callable[[],any]):
+        self._onCancelCommands.remove(onCancelCommand)
 
 class AppSearchBar_WithDropDown(AppWidget(QWidget)):
+    _searchCommands = []
+    _onCancelCommands = []
     def __init__(self:SearchBarClass, titleText:str=None, titleTextSize:int=12, searchButtonText:str=None, hintText:str=None, hintTextSize:int=12,
-                 searchCommand:Callable[[str],any]=None, searchButtonTextSize:int=12, dropdownChoices:Union[AutoTranslateWordList,Sequence[Union[AutoTranslateWord,str]]]=None,
+                 searchCommand:Callable[[str, str],any]=None, searchButtonTextSize:int=12, dropdownChoices:Union[AutoTranslateWordList,Sequence[Union[AutoTranslateWord,str]]]=None,
                  onDropdownChanged:Callable[[str],any]=None, onCancelButtonClicked:Callable[[],any]=None, height:int=40, **kwargs):
         super().__init__(height=height, **kwargs)
 
@@ -100,7 +115,8 @@ class AppSearchBar_WithDropDown(AppWidget(QWidget)):
         self.cancelButton.clicked.connect(self.inputArea.clear)
         self.cancelButton.setFixedWidth(int(height * 0.8))
         if onCancelButtonClicked is not None:
-            self.cancelButton.clicked.connect(onCancelButtonClicked)
+            self._onCancelCommands.append(onCancelButtonClicked)
+        self.cancelButton.clicked.connect(lambda: list(map(lambda x: x(), self._onCancelCommands)))
         self.hBoxLayout.addWidget(self.cancelButton)
 
         self.searchButton = AppButton(text=searchButtonText, icon=appManager.getUIImagePath('small_search.png'),
@@ -111,7 +127,9 @@ class AppSearchBar_WithDropDown(AppWidget(QWidget)):
         self.hBoxLayout.addWidget(self.searchButton)
 
         if searchCommand is not None:
-            self.searchButton.clicked.connect(lambda: searchCommand(self.inputArea.text()))
+            self._searchCommands.append(searchCommand)
+
+        self.searchButton.clicked.connect(lambda: list(map(lambda x: x(self.inputArea.text(), self.dropDown.currentChoiceKey), self._searchCommands)))
 
         self.hBoxLayout.setStretch(0, 1)
         self.hBoxLayout.setStretch(1, 1)
@@ -119,3 +137,12 @@ class AppSearchBar_WithDropDown(AppWidget(QWidget)):
         self.hBoxLayout.setStretch(3, 1)
 
         self.adjustSize()
+
+    def addSearchCommand(self, searchCommand:Callable[[str],any]):
+        self._searchCommands.append(searchCommand) if searchCommand not in self._searchCommands else None
+    def removeSearchCommand(self, searchCommand:Callable[[str],any]):
+        self._searchCommands.remove(searchCommand)
+    def addOnCancelCommand(self, onCancelCommand:Callable[[],any]):
+        self._onCancelCommands.append(onCancelCommand) if onCancelCommand not in self._onCancelCommands else None
+    def removeOnCancelCommand(self, onCancelCommand:Callable[[],any]):
+        self._onCancelCommands.remove(onCancelCommand)

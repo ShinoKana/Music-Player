@@ -63,8 +63,8 @@ class AppScrollBox(AppWidget(ScrollArea)):
         self.__titleTextSize = titleTextSize
     #endregion
     @property
-    def components(self) -> list:
-        return self.__components
+    def components(self) -> tuple:
+        return tuple(self.__components)
 
     def resizeEvent(self:ScrollBoxHint, e):
         ''' override resizeEvent of QScrollArea '''
@@ -72,17 +72,24 @@ class AppScrollBox(AppWidget(ScrollArea)):
         self.titleLabel.resize(self.scrollWidget.size().width()*0.97, self.titleLabel.height()) if self.titleLabel else None
         self.titleLabel.move(int((self.scrollWidget.size().width() - self.titleLabel.size().width())/2), 0) if self.titleLabel else None
         super().resizeEvent(e)
-    def addComponent(self:ScrollBoxHint, component):
+    def addComponent(self:ScrollBoxHint, component, order:int=None) -> QWidget:
         if isinstance(component, QWidget):
             component.setParent(self.scrollWidget)
-            self.expandLayout.addWidget(component)
+            if order is None:
+                self.expandLayout.addWidget(component)
+            else:
+                self.expandLayout.insertWidget(order, component)
         else:
             newWidget = QWidget(self.scrollWidget)
             newWidget.setLayout(component)
-            self.expandLayout.addWidget(newWidget)
+            if order is None:
+                self.expandLayout.addWidget(newWidget)
+            else:
+                self.expandLayout.insertWidget(order, newWidget)
         component.show()
         self.__components.append(component)
         self.adjustScrollAreaSize()
+        return component
     def removeComponent(self:ScrollBoxHint, component):
         if component not in self.components:
             return
@@ -93,6 +100,8 @@ class AppScrollBox(AppWidget(ScrollArea)):
     def removeAllComponents(self:ScrollBoxHint):
         for component in self.components:
             self.removeComponent(component)
+    def sortComponents(self:ScrollBoxHint, key, reverse=False):
+        self.expandLayout._widgets.sort(key=key, reverse=reverse)
     def adjustScrollAreaSize(self):
         self.scrollWidget.adjustSize()
         self.scrollWidget.resize(self.scrollWidget.size())

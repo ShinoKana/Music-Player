@@ -1,6 +1,8 @@
 from PySide2.QtWidgets import QWidget
 from PySide2.QtCore import Qt
 from PySide2.QtGui import QColor,QResizeEvent
+
+import Core
 from Core import appManager
 from typing import Union, Literal
 import os
@@ -114,6 +116,9 @@ class AppWidgetHintClass(QWidget):
         pass
     @backgroundColor.setter
     def backgroundColor(self, backgroundColor: Union[QColor, str]):
+        pass
+    @property
+    def furthurBackgroundColor(self) -> QColor:
         pass
     def SetBackgroundColor(self, backgroundColor: Union[QColor, str]):
         pass
@@ -414,6 +419,9 @@ def __AppWidget(WidgetClass) -> AppWidgetHintClass:
                 return
             self._backgroundColor = backgroundColor
             self.changeStyle('background-color', self._backgroundColor.name() if self._backgroundColor.alpha() > 0 else 'transparent')
+        @property
+        def furthurBackgroundColor(self) -> QColor:
+            return self.backgroundColor.lighter() if appManager.config.isDarkTheme() else self.backgroundColor.darker()
         #endregion
 
         #region foregroundColor

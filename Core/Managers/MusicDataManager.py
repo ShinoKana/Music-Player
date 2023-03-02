@@ -3,7 +3,7 @@ from PySide2.QtMultimedia import QMediaContent, QMediaPlaylist
 from PySide2.QtGui import QIcon
 from ExternalPackage.sqlite_utils import Table
 from .LocalDataManager import localDataManager
-from typing import Union, Dict, cast, Iterable
+from typing import Union, Dict, List, Sequence, Tuple, Callable
 from .Manager import *
 from Core.DataType import FileType, FileInfo
 import Core
@@ -52,6 +52,11 @@ class Music(QMediaContent, FileInfo):
             self._lyricPath = localDataManager.expectedPathByHash(lyricHash)
         _allMusics[id] = self
         self.__init__ = lambda *args, **kwargs: None
+    def __eq__(self, other):
+        if isinstance(other, Music):
+            return self.id == other.id
+        elif isinstance(other, QMediaContent):
+            return QMediaContent.__eq__(self, other)
     @property
     def id(self)->int:
         return self._id
@@ -72,7 +77,9 @@ class Music(QMediaContent, FileInfo):
         return self._duration
     @property
     def duration_formatted(self)->str:
-        return '{}:{}'.format(self._duration // 60, self._duration % 60)
+        min = self._duration // 60
+        sec = self._duration % 60
+        return '{}:{}'.format(min, sec if sec >= 10 else '0' + str(sec))
     @property
     def coverPath(self)->str:
         return self._coverPath
@@ -80,30 +87,44 @@ class Music(QMediaContent, FileInfo):
     def lyricPath(self)->str:
         return self._lyricPath
 class MusicList(QMediaPlaylist):
-    _id: int = None
-    _name: str = ""
-    def __new__(cls, id, name, musicIDs: Iterable[int] = None):
+    def __new__(cls, id, name, musicIDs: Sequence[int] = None):
         if id in _allMusicLists:
             _allMusicLists[id].__init__ = lambda *args, **kwargs: None
             return _allMusicLists[id]
         else:
             lst = QMediaPlaylist.__new__(cls)
-            cls.__init__(lst, id, name, musicIDs)
-            lst.__init__ = lambda *args, **kwargs: None
             _allMusicLists[id] = lst
             return lst
-    def __init__(self, id, name, musicIDs: Iterable[int] = None):
-        QMediaPlaylist.__init__(self)
+    def __init__(self, id, name, musicIDs: Sequence[int] = None):
+        super().__init__()
+        self._musicIDs = list(musicIDs) if musicIDs else []
         self._id = id
         self._name = name
-        if musicIDs:
-            for musicID in musicIDs:
-                music = _allMusics.get(musicID, None)
-                self.addMedia(music) if music else None
-
+        for musicID in musicIDs:
+            music = _allMusics.get(musicID, None)
+            self.addMedia(music) if music else None
+    @property
+    def currentMusic(self)->Music:
+        return musicDataManager.getMusic(self.musicIDs[self.currentIndex()])
+    @property
+    def id(self)->int:
+        return self._id
+    @property
+    def name(self)->str:
+        return self._name
+    @property
+    def musicIDs(self)->Tuple[int]:
+        return tuple(self._musicIDs)
+    def deleteMusic(self, musicID:int):
+        if musicID in self._musicIDs:
+            self.removeMedia(self._musicIDs.index(musicID))
+            self._musicIDs.remove(musicID)
+            if self.id !=-1: # -1 is the default playlist for all songs
+                musicDataManager.musicTable.update(self.id, {'musicList': ','.join(map(str, self._musicIDs))})
 class MusicDataManager(Manager):
     _musicTable: Table = None
     _musicListTable: Table = None
+    _onMusicAdded: List[Callable[[Music], any]] = []
     def __init__(self):
         localDataManager.database.create_table(
            name='music',
@@ -115,7 +136,7 @@ class MusicDataManager(Manager):
                          ('coverHash', 'file', 'fileHash'),
                          ('lyricHash', 'file', 'fileHash')],
            if_not_exists=True,
-           foreign_key_cascade=['musicHash', 'coverHash', 'lyricHash'],
+           foreign_key_cascade=['musicHash'],
            autoincrement='id'
         )
         self._musicTable = localDataManager.database['music']
@@ -134,6 +155,7 @@ class MusicDataManager(Manager):
         for row in self._musicTable.rows:
             _allMusics[row['id']] = Music(hash=row['musicHash'],id=row['id'], title=row['title'], artist=row['artist'], duration=row['duration'],
                                                     album=row['album'], albumArtist=row['albumArtist'], fileExt=row['fileExt'], coverHash=row['coverHash'], lyricHash=row['lyricHash'])
+        _allMusicLists[-1] = MusicList(-1, 'allSong', _allMusics.keys()) #allSong list, can't be deleted and modified
         for row in self._musicListTable.rows:
             _musicList = [int(s) for s in row['musicList'].split(',')]
             _allMusicLists[row['id']] = MusicList(row['id'], row['name'], _musicList)
@@ -153,14 +175,19 @@ class MusicDataManager(Manager):
         return _allMusicLists
     def getMusic(self, id:int)-> Union[None, 'Music']:
         try:
-            return self._allMusics[id]
+            return _allMusics[id]
         except KeyError:
             return None
     def getMusicList(self, id:int)-> Union[None, 'MusicList']:
         try:
-            return self._allMusicLists[id]
+            return _allMusicLists[id]
         except KeyError:
             return None
+
+    def addOnMusicAddedCallback(self, callback: Callable[['Music'], any]):
+        self._onMusicAdded.append(callback)
+    def removeOnMusicAddedCallback(self, callback: Callable[['Music'], any]):
+        self._onMusicAdded.remove(callback)
 
     #save & delete
     def saveMusic(self, fileInfo:'FileInfo')-> Union[None, 'Music']:
@@ -186,6 +213,8 @@ class MusicDataManager(Manager):
         music = Music(hash=fileInfo.fileHash, id=addedID, title=title, artist=artist, duration=duration, album=album,
                           albumArtist=albumArtist, coverHash=coverHash, fileExt=fileInfo.extension)
         _allMusics[addedID] = music
+        for callback in self._onMusicAdded:
+            callback(music)
         return music
     def saveCover(self, fileInfo:'FileInfo', music:Union[int, 'Music']):
         if fileInfo.fileType != Core.FileType.IMG and fileInfo.fileType != Core.FileType.IMG:
@@ -215,5 +244,43 @@ class MusicDataManager(Manager):
             _allMusics[_musicID]._lyricPath = localDataManager.expectedPathByHash(hash)
         except KeyError:
             pass
+    def deleteMusic(self, music:Union[int, 'Music']):
+        _musicID = music if isinstance(music, int) else music.id
+        _musicData = self.musicTable.get(_musicID)
+        localDataManager.deleteFile(_musicData.get('lyricHash',None)) if _musicData.get('lyricHash',None) else None
+        localDataManager.deleteFile(_musicData.get('coverHash',None)) if _musicData.get('coverHash',None) else None
+        localDataManager.deleteFile(_musicData.get('musicHash'))
+        for musicList in _allMusicLists.values():
+            musicList.deleteMusic(_musicID) # try all
+        from Core import musicPlayerManager, appManager
+        if musicPlayerManager.currentMusic.id == _musicID:
+            musicPlayerManager.clear()
+        if appManager.record.lastSongIndex.value == _musicID:
+            appManager.record.lastSongIndex.value = 0
+            appManager.record.lastSongTime.value = 0
+        try:
+            del _allMusics[_musicID]
+        except KeyError:
+            pass
+    def deleteLyric(self, music:Union[int, 'Music']):
+        _musicID = music if isinstance(music, int) else music.id
+        _musicData = self.musicTable.get(_musicID)
+        succ = (localDataManager.deleteFile(_musicData.get('lyricHash',None)) if _musicData.get('lyricHash',None) else None)
+        if succ:
+            self.musicTable.update(_musicID, {'lyricHash':None})
+            try:
+                _allMusics[_musicID]._lyricPath = None
+            except KeyError:
+                pass
+    def deleteCover(self, music:Union[int, 'Music']):
+        _musicID = music if isinstance(music, int) else music.id
+        _musicData = self.musicTable.get(_musicID)
+        succ = (localDataManager.deleteFile(_musicData.get('coverHash',None)) if _musicData.get('coverHash',None) else None)
+        if succ:
+            self.musicTable.update(_musicID, {'coverHash':None})
+            try:
+                _allMusics[_musicID]._coverPath = None
+            except KeyError:
+                pass
 
 musicDataManager = MusicDataManager()

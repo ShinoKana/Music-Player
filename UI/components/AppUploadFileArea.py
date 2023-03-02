@@ -220,6 +220,7 @@ class AppUploadFileArea_WithFileBox(AppWidget(QWidget)):
     _uploadButtonCommands:List[Callable[[Sequence[FileInfo]],any]] = []
     _fileBoxShowsType:bool = True
     _fileBoxShowsSize:bool = True
+    _fileBoxShowsPath:bool = True
     def __init__(self: UploadFileArea_WithFileBox_Hint, hintText:str=None, fontSize=16, onFileAdded:Callable[[FileInfo],any]=None,
                  allowMultiFile:bool=True, fontColor:Union[str,QColor]=None, onClick:Callable[[],any]=None, height:int=225,
                  onlyAcceptFiles:tuple=(), clickAddFileHintText:str=None, fileListBoxTitleText:str=None, uploadButtonCommand:Callable[[Sequence[FileInfo]],any]=None,
@@ -295,7 +296,7 @@ class AppUploadFileArea_WithFileBox(AppWidget(QWidget)):
         def uploadFiles():
             try:
                 for func in self._uploadButtonCommands:
-                    func(self.currentFiles)
+                    func(tuple(self.currentFiles))
             except Exception as e:
                 print("upload error, message:", e)
         self.uploadButton = AppButton(text=AutoTranslateWord('upload'), parent=self,height=34, fontBold=True, command=uploadFiles)
@@ -330,12 +331,21 @@ class AppUploadFileArea_WithFileBox(AppWidget(QWidget)):
     @fileBoxShowsType.setter
     def fileBoxShowsType(self, value:bool):
         self._fileBoxShowsType = value
+        # TODO update all fileBox
     @property
     def fileBoxShowsSize(self):
         return self._fileBoxShowsSize
     @fileBoxShowsSize.setter
     def fileBoxShowsSize(self, value:bool):
         self._fileBoxShowsSize = value
+        # TODO update all fileBox
+    @property
+    def fileBoxShowsPath(self):
+        return self._fileBoxShowsPath
+    @fileBoxShowsPath.setter
+    def fileBoxShowsPath(self, value:bool):
+        self._fileBoxShowsPath = value
+        #TODO update all fileBox
 
 
 

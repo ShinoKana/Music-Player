@@ -9,14 +9,14 @@ from ExternalPackage.qfluentwidgets.common import (ConfigValidator, OptionsConfi
                             ConfigItem, ConfigSerializer, ColorValidator, exceptionHandler, ColorSerializer,
                             RangeValidator, QConfig, qconfig)
 #path
-RESOURCE_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), '../..', "Resources")
+RESOURCE_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..','..', "Resources")
 RESOURCE_IMAGE_PATH = os.path.join(RESOURCE_PATH, "images")
 TRANSLATION_DATA_PATH = os.path.join(RESOURCE_PATH,"translation.csv")
 APP_SETTING_PATH = os.path.join(RESOURCE_PATH, 'appSetting.json')
 APP_RECORD_PATH = os.path.join(RESOURCE_PATH, 'appRecord.json')
 APP_TEMP_RECORD_PATH = os.path.join(RESOURCE_PATH, 'appTempRecord.json')
 
-DATA_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), '../..', "Data")
+DATA_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..', "Data")
 DATABASE_PATH = os.path.join(DATA_PATH, "database.db")
 
 #config
@@ -24,7 +24,7 @@ class NumberValidator(ConfigValidator):
     def validate(self, value):
         return isinstance(value, int) or isinstance(value, float)
     def correct(self, value):
-        return 0
+        return value if self.validate(value) else 0
 
 from .Manager import *
 class ConfigManager(QConfig, Manager):
@@ -216,11 +216,11 @@ class RecordManager(AppRecord, Manager):
     #system
     soundVolume = RangeRecordItem("system", "soundVolume", 100, RangeValidator(0, 100))
     #music
-    musicPlayMode = OptionsRecordItem("music", "playMode", "listLoop", OptionsValidator(["listLoop", "random", "singleLoop"]))
-    lastSong = OptionsRecordItem("music", "lastSong", "", OptionsValidator([""]))
-    lastSongIndex = RecordItem("music", "lastSongIndex", 0, NumberValidator())
-    lastSongList = OptionsRecordItem("music", "lastSongList", "allSong", OptionsValidator(["allSong"]))
+    musicPlayMode = OptionsRecordItem("music", "playMode", "listLoop", OptionsValidator(["listLoop", "random", "loop"]))
+    lastSongIndex = RecordItem("music", "lastSongIndex", -1, NumberValidator())
+    lastSongList = RecordItem("music", "lastSongList", -1, NumberValidator())
     lastSongTime = RecordItem("music", "lastSongTime", 0, NumberValidator())
+    unfoldingSongList = RecordItem("music", "unfoldingSongList", "-1", AppRecordValidator())
     def __init__(self):
         AppRecord.__init__(self, APP_RECORD_PATH)
         self._temperateRecord = None

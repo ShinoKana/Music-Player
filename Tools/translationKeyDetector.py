@@ -1,11 +1,28 @@
 #for detecting all .py files under ../UI folder, check if any translation key is missing or redundant. output to csv file.
 import re, os, sys
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)),"..","Core"))
-from Core import appManager
+RESOURCE_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', "Resources")
+TRANSLATION_DATA_PATH = os.path.join(RESOURCE_PATH,"translation.csv")
 
 if __name__ == '__main__':
-    translationKeys = appManager.translationData.keys()
-    languages = appManager.config.languages
+    translationData = {}
+    languages = []
+    with open(TRANSLATION_DATA_PATH, 'r', encoding='utf-8') as translationFile:
+        hasGetLanguages = False
+        for i, line in enumerate(translationFile.readlines()):
+            if line[0] == '\n' or len(line) == 0 or line[0] == '#':
+                continue
+            # getTranslation languages
+            elif not hasGetLanguages:
+                languages = line.strip().split(',')[1:]
+                hasGetLanguages = True
+                continue
+            # getTranslation translation data
+            else:
+                lst = re.split(r'(?<!\\),', line.strip())
+                # don't care about case of key
+                translationData[str(lst[0]).lower().replace(r'\,', ',')] = [s.replace(r'\,', ',') for s in lst[1:]]
+    translationKeys = translationData.keys()
     print("languages: ",languages)
     keysNeedAdd = []
     keysNeedRemove = []
@@ -78,7 +95,7 @@ if __name__ == '__main__':
     print("Keys need remove: {}\n".format(keysNeedRemove))
 
     if len(keysNeedAdd) > 0 or len(keysNeedRemove) > 0:
-        with open(appManager.TRANSLATION_DATA_PATH,'r', encoding='utf-8') as originFile:
+        with open(TRANSLATION_DATA_PATH,'r', encoding='utf-8') as originFile:
             lines = originFile.readlines()
             for line in lines.copy():
                 if ',' in line: #data line
@@ -89,7 +106,7 @@ if __name__ == '__main__':
                 lines.append(key.replace(',',r'\,') + '{}\n'.format(','*len(languages)))
 
         if input("Do you want to save changes? (y/n) \n") == 'y':
-            with open(appManager.TRANSLATION_DATA_PATH,'w+', encoding='utf-8') as originFile:
+            with open(TRANSLATION_DATA_PATH,'w+', encoding='utf-8') as originFile:
                 originFile.writelines(lines)
             print("Changes saved")
         else:

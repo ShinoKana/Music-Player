@@ -17,6 +17,7 @@ class AppWindow(FramelessWindow):
     _instance = None
     _hasInit = False
     onPageChanged = Signal(AppPage)
+    _toastCount = 0
     def __new__(cls, *args, **kwargs):
         if cls.allowMultiplePageInstances(cls):
             originInit = cls.__init__
@@ -134,12 +135,12 @@ class AppWindow(FramelessWindow):
         self.setLayout(self.mainLayout)
         self.currentPage = None
         self.naviBarHideButton.raise_() if needNavBar else None
-
     def __del__(self):
         if self._instance == self:
             self._instance = None
             self._hasInit = False
         super().__del__()
+
     @classmethod
     @abstractmethod
     def allowMultiplePageInstances(cls):
@@ -263,8 +264,10 @@ class AppWindow(FramelessWindow):
     #endregion
 
     #region toast and loading
-    def toast(self, title: str = "", content: str = "", duration: float = 5, icon: Union[str, QIcon, QPixmap] = None):
-        t = ToastToolTip(parent=self.window(), title=title, content=content, duration=duration, icon=icon)
+    def toast(self, title: str = "", content: str = "", duration: float = 4.5, icon: Union[str, QIcon, QPixmap] = None):
+        t = ToastToolTip(parent=self.window(), title=title, content=content, duration=duration, icon=icon, toastPosIndex=self._toastCount,
+                         onFinished=lambda: setattr(self, '_toastCount', self._toastCount - 1))
+        self._toastCount += 1
         fontColor = 'black' if appManager.config.isLightTheme() else 'white'
         borderColor = fontColor
         #region style

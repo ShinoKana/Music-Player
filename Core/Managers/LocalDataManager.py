@@ -7,6 +7,9 @@ from .Manager import *
 
 class LocalDataManager(Manager):
     def __init__(self):
+        if not os.path.exists(appManager.DATABASE_PATH):
+            #create database.db file if not exists
+            open(appManager.DATABASE_PATH, 'w').close()
         self._database = Database(appManager.DATABASE_PATH)
         self._database.setForeignKeyRestrict(True)
         self._database.create_table(name='file',

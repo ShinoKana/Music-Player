@@ -25,7 +25,6 @@ done,Done,完成,完成
 choose folder,Choose folder,选择文件夹,選擇文件夾
 home,Home,主页,主頁
 setting,Setting,设置,設置
-drop your file here!,Drop your file here!,将文件拖到此处,將文件拖到此處
 component (light mode) color,UI Component (light mode) color,UI组件（浅色模式）颜色,UI組件（淺色模式）顏色
 set the color of component when app is in light mode,Set the color of component when app is in light mode,设置当软件处于浅色模式时的UI组件颜色,設置當軟件處於淺色模式時的UI組件顏色
 component (dark mode) color,UI Component (dark mode) color,UI组件（深色模式）颜色,UI組件（深色模式）顏色
@@ -36,10 +35,6 @@ file,File,文件,文件
 upload list,Upload List,上传列表,上傳列表
 upload,Upload,上传,上傳
 delete,Delete,删除,刪除
-pdf,PDF,PDF,PDF
-video,Video,视频,視頻
-audio,Audio,音频,音頻
-other,Other,其他,其他
 light,Light,浅色,淺色
 dark,Dark,深色,深色
 use system setting,Use system setting,使用系统设置,使用系統設置
@@ -49,7 +44,32 @@ song list,Song List,歌曲列表,歌曲列表
 loading...,Loading...,加载中...,加載中...
 (22-23cuhk) csci3280 group project - music player,(22-23cuhk) csci3280 group project - music player,(22-23cuhk) csci3280 group project - music player,(22-23cuhk) csci3280 group project - music player
 player,Player,播放器,播放器
-songlist,Songlist,歌曲列表,歌曲列表
-doc,Doc,文档,文檔
-txt,Txt,文本,文本
-img,Img,图片,圖片
+volume,Volume,音量,音量
+unknown,Unknown,未知,未知
+file type not supported.,File type not supported.,不支持的文件类型,不支持的文件類型
+github repo,Github Repo,github仓库,github倉庫
+click to open,Click to open,点击打开,點擊打開
+check out our github repo!,Check out our github repo!,查看我们的github仓库!,查看我們的github倉庫!
+all songs,All Songs,所有歌曲,所有歌曲
+unknown album,Unknown Album,未知专辑,未知專輯
+delete from list,Delete from list,从列表中删除,從列表中刪除
+todo,TODO,待完成,待完成
+add song list,Add Song List,添加歌单,添加歌單
+song manage,Song Manage,歌曲管理,歌曲管理
+upload song,Upload Song,上传歌曲,上傳歌曲
+drag or click to add your song here,Drag or click to add your song here,拖拽或点击添加歌曲,拖拽或點擊添加歌曲
+search song,Search Song,搜索歌曲,搜索歌曲
+enter song name,Enter song name,输入歌曲名称,輸入歌曲名稱
+enter artist name,Enter artist name,输入歌手名称,輸入歌手名稱
+enter album name,Enter album name,输入专辑名称,輸入專輯名稱
+all song,All Song,所有歌曲,所有歌曲
+duration,Duration,时长,時長
+song name,Song Name,歌曲名称,歌曲名稱
+artist,Artist,歌手,歌手
+album,Album,专辑,專輯
+play list,Play List,播放列表,播放列表
+music,Music,音乐,音樂
+already exists in database,already exists in database,已存在于数据库,已存在於數據庫
+is not a valid music file,is not a valid music file,不是有效的音乐文件,不是有效的音樂文件
+uploaded successfully,uploaded successfully,上传成功,上傳成功
+deleted successfully,deleted successfully,删除成功,刪除成功

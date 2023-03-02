@@ -16,5 +16,6 @@ from .AppSettingCard import (AppSettingCardGroup, AppSwitchSettingCard, AppRange
 from .AppTabBar import AppTabBar
 from .AppMusicBox import AppMusicBox
 from .AppSlider import AppSlider
+from .AppFoldBox import AppFoldBox
 
 
