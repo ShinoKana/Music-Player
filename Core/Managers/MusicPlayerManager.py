@@ -4,18 +4,31 @@ from typing import Literal
 from .Manager import *
 
 class MusicPlayerManager(Manager, QMediaPlayer):
+
     _playlist: MusicList = None
+    _onPlayModeChanged = []
+    _onPlayListChanged = []
+    _onMusicChanged = []
+    _onClear = []
+
     def __init__(self):
         QMediaPlayer.__init__(self)
-        self._onPlayModeChanged = []
-        self._onPlayListChanged = []
-        self._onMusicChanged = []
-        self._onClear = []
         self.playMode = appManager.record.musicPlayMode.value
         self.volume = appManager.record.soundVolume.value
         self._currentMusic = musicDataManager.getMusic(appManager.record.lastSongIndex.value)
+
+        #playlist
+        def playlistMusicRemovedCallback(music:'Music'):
+            if self._currentMusic == music:
+                try:
+                    self.goNextMusic()
+                    self.stop()
+                except:
+                    self.clear()
+        self.playlisyMusicRemovedCallback = playlistMusicRemovedCallback
+        #TODO callback for whole playlist deleted
         self._playlist = musicDataManager.getMusicList(appManager.record.lastSongList.value)
-        self.setPlaylist(self._playlist)
+        self.setPlaylist(self._playlist) #playlist must not None
         self._playlist.setPlaybackMode(self.QTplayMode)
         if self._currentMusic is not None:
             self._playlist.setCurrentIndex(self._playlist._musicIDs.index(self._currentMusic._id))
@@ -31,6 +44,7 @@ class MusicPlayerManager(Manager, QMediaPlayer):
         appManager.record.lastSongIndex.value = self._currentMusic._id if self._currentMusic is not None else 0
         appManager.record.lastSongList.value = self._playlist._id if self._playlist is not None else -1
 
+    # region callbacks
     def addOnMusicChanged(self, func) -> None:
         self._onMusicChanged.append(func) if func not in self._onMusicChanged else None
     def removeOnMusicChanged(self, func) -> None:
@@ -47,18 +61,27 @@ class MusicPlayerManager(Manager, QMediaPlayer):
         self._onClear.append(func) if func not in self._onClear else None
     def removeOnClearCallback(self, func) -> None:
         self._onClear.remove(func) if func in self._onClear else None
-    def clear(self):
-        self.stop()
-        self.setPlaylist(musicDataManager.getMusicList(-1)) # -1 is the default music list
-        self._currentMusic = None
-        for func in self._onClear:
-            func()
+    # endregion
+
+    # region properties
     @property
     def currentMusic(self) -> 'Music':
         return self._currentMusic
     @property
     def currentMusicList(self) -> 'MusicList':
         return self._playlist
+    @currentMusicList.setter
+    def currentMusicList(self, playlist: MusicList) -> None:
+        self.setPlaylist(playlist)
+    def setPlaylist(self, playlist: MusicList) -> None:
+        QMediaPlayer.setPlaylist(self, playlist)
+        if self._playlist:
+            self._playlist.removeOnMusicRemovedCallback(self.playlisyMusicRemovedCallback)
+        self._playlist = playlist
+        self._playlist.addOnMusicRemovedCallback(self.playlisyMusicRemovedCallback)
+        playlist.setPlaybackMode(self.QTplayMode)
+        for func in self._onPlayListChanged:
+            func(playlist)
     @property
     def playMode(self) -> str:
         return appManager.record.musicPlayMode.value
@@ -92,14 +115,15 @@ class MusicPlayerManager(Manager, QMediaPlayer):
     def setVolume(self, volume:int) -> None:
         '''override QMediaPlayer.setVolume'''
         self.volume = volume
+    # endregion
 
-    def setPlaylist(self, playlist: MusicList) -> None:
-        QMediaPlayer.setPlaylist(self, playlist)
-        self._playlist = playlist
-        playlist.setPlaybackMode(self.QTplayMode)
-        for func in self._onPlayListChanged:
-            func(playlist)
-
+    # region methods
+    def clear(self):
+        self.stop()
+        self.setPlaylist(musicDataManager.getMusicList(-1)) # -1 is the default music list
+        self._currentMusic = None
+        for func in self._onClear:
+            func()
     def goNextMusic(self) -> None:
         if self.playMode == 'listLoop' and self._playlist.currentIndex() == self._playlist.mediaCount() - 1:
             self._playlist.setCurrentIndex(0)
@@ -110,6 +134,6 @@ class MusicPlayerManager(Manager, QMediaPlayer):
             self._playlist.setCurrentIndex(self._playlist.mediaCount() - 1)
         else:
             self._playlist.previous()
-
+    # endregion
 
 musicPlayerManager = MusicPlayerManager()

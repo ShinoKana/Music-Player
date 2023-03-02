@@ -12,7 +12,7 @@ class AppScrollBox(AppWidget(ScrollArea)):
 
         self.__titleText = None
         self.__titleTextSize = None
-        self.__components = []
+        self._components = []
         self.titleLabel = QLabel(parent=self)
         self.titleLabel.setAlignment(Qt.AlignCenter|Qt.AlignVCenter)
         self.titleLabel.setContentsMargins(0, 0, 5, 0)
@@ -64,7 +64,7 @@ class AppScrollBox(AppWidget(ScrollArea)):
     #endregion
     @property
     def components(self) -> tuple:
-        return tuple(self.__components)
+        return tuple(self._components)
 
     def resizeEvent(self:ScrollBoxHint, e):
         ''' override resizeEvent of QScrollArea '''
@@ -87,15 +87,15 @@ class AppScrollBox(AppWidget(ScrollArea)):
             else:
                 self.expandLayout.insertWidget(order, newWidget)
         component.show()
-        self.__components.append(component)
+        self._components.append(component)
         self.adjustScrollAreaSize()
         return component
     def removeComponent(self:ScrollBoxHint, component):
-        if component not in self.components:
+        if component not in self._components:
             return
         self.expandLayout.removeWidget(component)
         component.setParent(None)
-        self.__components.remove(component)
+        self._components.remove(component)
         component.deleteLater()
     def removeAllComponents(self:ScrollBoxHint):
         for component in self.components:

@@ -54,7 +54,7 @@ class AppFoldBox(AppWidget(QWidget)):
         if defaultHide:
             self.foldButton.clicked.emit()
 
-
+    #region callbacks
     def addOnHideCallback(self, callback:Callable[[],any]):
         self._onHide.append(callback)
     def addOnShowCallback(self, callback:Callable[[],any]):
@@ -63,6 +63,9 @@ class AppFoldBox(AppWidget(QWidget)):
         self._onHide.remove(callback)
     def removeOnShowCallback(self, callback:Callable[[],any]):
         self._onShow.remove(callback)
+    #endregion
+
+    #components
     @property
     def components(self)->tuple:
         return tuple(self._components)
@@ -79,6 +82,13 @@ class AppFoldBox(AppWidget(QWidget)):
             self._components.append(component)
         self.adjustSize()
         return component
+    def removeComponent(self, component:QWidget):
+        if component in self._components:
+            self.innerLayout.removeWidget(component)
+            self._components.remove(component)
+            self.adjustSize()
+
+    #show & hide
     def hideInner(self,emitCallback=True):
         self.foldButton.setIcon(appManager.getUIImagePath('right_arrow.png' if self._foldIcon is None else self._foldIcon))
         self.innerLayoutWidget.hide()

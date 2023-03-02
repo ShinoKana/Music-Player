@@ -13,6 +13,7 @@ _allMusics:Dict[int, 'Music'] = {}
 _allMusicLists:Dict[int, 'MusicList'] = {}
 
 class Music(QMediaContent, FileInfo):
+
     _id: int = None
     _title: str = None
     _artist: str = None
@@ -29,7 +30,10 @@ class Music(QMediaContent, FileInfo):
             return super().__new__(cls)
     def __init__(self, hash, id, title: str = "", artist: str = "", duration: int = 0, album: str = "",
                  albumArtist="", fileExt: str = "", coverHash=None, lyricHash=None):
-
+        self._onCoverChangedCallbacks: List[Callable] = []
+        self._onLyricChangedCallbacks: List[Callable] = []
+        self._onDataChangedCallbacks: List[Callable] = []
+        self._onDeletedCallbacks: List[Callable] = []
         self._filePath = localDataManager.expectedPathByHash(hash)
         self._fileHash = hash
         self._fileType = FileType.AUDIO
@@ -57,6 +61,27 @@ class Music(QMediaContent, FileInfo):
             return self.id == other.id
         elif isinstance(other, QMediaContent):
             return QMediaContent.__eq__(self, other)
+
+    # region callbacks
+    def addOnCoverChangedCallback(self, callback: Callable[['Music'], any]):
+        self._onCoverChangedCallbacks.append(callback) if callback not in self._onCoverChangedCallbacks else None
+    def removeOnCoverChangedCallback(self, callback: Callable[['Music'], any]):
+        self._onCoverChangedCallbacks.remove(callback) if callback in self._onCoverChangedCallbacks else None
+    def addOnLyricChangedCallback(self, callback: Callable[['Music'], any]):
+        self._onLyricChangedCallbacks.append(callback) if callback not in self._onLyricChangedCallbacks else None
+    def removeOnLyricChangedCallback(self, callback: Callable[['Music'], any]):
+        self._onLyricChangedCallbacks.remove(callback) if callback in self._onLyricChangedCallbacks else None
+    def addOnDataChangedCallback(self, callback: Callable[['Music'], any]):
+        self._onDataChangedCallbacks.append(callback) if callback not in self._onDataChangedCallbacks else None
+    def removeOnDataChangedCallback(self, callback: Callable[['Music'], any]):
+        self._onDataChangedCallbacks.remove(callback) if callback in self._onDataChangedCallbacks else None
+    def addOnDeletedCallback(self, callback: Callable[['Music'], any]):
+        self._onDeletedCallbacks.append(callback) if callback not in self._onDeletedCallbacks else None
+    def removeOnDeletedCallback(self, callback: Callable[['Music'], any]):
+        self._onDeletedCallbacks.remove(callback) if callback in self._onDeletedCallbacks else None
+    # endregion
+
+    # region properties
     @property
     def id(self)->int:
         return self._id
@@ -86,10 +111,41 @@ class Music(QMediaContent, FileInfo):
     @property
     def lyricPath(self)->str:
         return self._lyricPath
+    # endregion
+
+    #region methods
+    def setCover(self, coverHash:str):
+        self._coverPath = localDataManager.expectedPathByHash(coverHash)
+        musicDataManager.musicTable.update(self.id, {'coverHash': coverHash})
+        for callback in self._onCoverChangedCallbacks:
+            callback(self)
+    def deleteCover(self):
+        return musicDataManager.deleteCover(self.id)
+    def setLyric(self, lyricHash:str):
+        self._lyricPath = localDataManager.expectedPathByHash(lyricHash)
+        musicDataManager.musicTable.update(self.id, {'lyricHash': lyricHash})
+        for callback in self._onLyricChangedCallbacks:
+            callback(self)
+    def deleteLyric(self):
+        return musicDataManager.deleteLyric(self.id)
+    def setData(self, title:str=None, artist:str=None, album:str=None, albumArtist:str=None):
+        if title:
+            self._title = title
+        if artist:
+            self._artist = artist
+        if album:
+            self._album = album
+        if albumArtist:
+            self._albumArtist = albumArtist
+        musicDataManager.musicTable.update(self.id, {'title': title, 'artist': artist, 'album': album, 'albumArtist': albumArtist})
+        for callback in self._onDataChangedCallbacks:
+            callback(self)
+    # endregion
+
 class MusicList(QMediaPlaylist):
+
     def __new__(cls, id, name, musicIDs: Sequence[int] = None):
         if id in _allMusicLists:
-            _allMusicLists[id].__init__ = lambda *args, **kwargs: None
             return _allMusicLists[id]
         else:
             lst = QMediaPlaylist.__new__(cls)
@@ -97,12 +153,43 @@ class MusicList(QMediaPlaylist):
             return lst
     def __init__(self, id, name, musicIDs: Sequence[int] = None):
         super().__init__()
+        self._removeMusicOnMusicDeletedCallback=lambda music: self.deleteMusic(music.id)
+        self._onMusicAdded = []
+        self._onMusicRemoved = []
+        self._onDataChanged = []
+        self._onDeleted = []
         self._musicIDs = list(musicIDs) if musicIDs else []
         self._id = id
         self._name = name
         for musicID in musicIDs:
             music = _allMusics.get(musicID, None)
-            self.addMedia(music) if music else None
+            self.addMedia(music)
+            music.addOnDeletedCallback(self._removeMusicOnMusicDeletedCallback)
+        self.__init__ = lambda *args, **kwargs: None
+    def __del__(self):
+        for callback in self._onDeleted:
+            callback(self)
+
+    # region callbacks
+    def addOnMusicAddedCallback(self, callback: Callable[['Music'], any]):
+        self._onMusicAdded.append(callback) if callback not in self._onMusicAdded else None
+    def removeOnMusicAddedCallback(self, callback: Callable[['Music'], any]):
+        self._onMusicAdded.remove(callback) if callback in self._onMusicAdded else None
+    def addOnMusicRemovedCallback(self, callback: Callable[['Music'], any]):
+        self._onMusicRemoved.append(callback) if callback not in self._onMusicRemoved else None
+    def removeOnMusicRemovedCallback(self, callback: Callable[['Music'], any]):
+        self._onMusicRemoved.remove(callback) if callback in self._onMusicRemoved else None
+    def addOnDataChangedCallback(self, callback: Callable[['MusicList'], any]):
+        self._onDataChanged.append(callback) if callback not in self._onDataChanged else None
+    def removeOnDataChangedCallback(self, callback: Callable[['MusicList'], any]):
+        self._onDataChanged.remove(callback) if callback in self._onDataChanged else None
+    def addOnDeletedCallback(self, callback: Callable[['MusicList'], any]):
+        self._onDeleted.append(callback) if callback not in self._onDeleted else None
+    def removeOnDeletedCallback(self, callback: Callable[['MusicList'], any]):
+        self._onDeleted.remove(callback) if callback in self._onDeleted else None
+    # endregion
+
+    # region properties
     @property
     def currentMusic(self)->Music:
         return musicDataManager.getMusic(self.musicIDs[self.currentIndex()])
@@ -115,16 +202,46 @@ class MusicList(QMediaPlaylist):
     @property
     def musicIDs(self)->Tuple[int]:
         return tuple(self._musicIDs)
+    # endregion
+
+    # region methods
+    def getPlaylistIndexByMusicID(self, musicID:int)->Union[int, None]:
+        return self._musicIDs.index(musicID) if musicID in self._musicIDs else None
+    def addMusic(self, musicID:int):
+        if musicID not in self._musicIDs:
+            music =_allMusics[musicID]
+            self.addMedia(music)
+            self._musicIDs.append(musicID)
+            music.addOnDeletedCallback(self._removeMusicOnMusicDeletedCallback)
+            if self.id !=-1:
+                musicDataManager.musicTable.update(self.id, {'musicList': ','.join(map(str, self._musicIDs))})
+            for callback in self._onMusicAdded:
+                callback(music)
     def deleteMusic(self, musicID:int):
         if musicID in self._musicIDs:
+            music = _allMusics[musicID]
             self.removeMedia(self._musicIDs.index(musicID))
             self._musicIDs.remove(musicID)
+            music.removeOnDeletedCallback(self._removeMusicOnMusicDeletedCallback)
             if self.id !=-1: # -1 is the default playlist for all songs
                 musicDataManager.musicTable.update(self.id, {'musicList': ','.join(map(str, self._musicIDs))})
+            for callback in self._onMusicRemoved:
+                callback(music)
+    def setData(self, name:str=None):
+        if name:
+            self._name = name
+        if self.id !=-1:
+            musicDataManager.musicListTable.update(self.id, {'name': name})
+        for callback in self._onDataChanged:
+            callback(self)
+    # endregion
+
 class MusicDataManager(Manager):
+
     _musicTable: Table = None
     _musicListTable: Table = None
     _onMusicAdded: List[Callable[[Music], any]] = []
+
     def __init__(self):
         localDataManager.database.create_table(
            name='music',
@@ -155,24 +272,34 @@ class MusicDataManager(Manager):
         for row in self._musicTable.rows:
             _allMusics[row['id']] = Music(hash=row['musicHash'],id=row['id'], title=row['title'], artist=row['artist'], duration=row['duration'],
                                                     album=row['album'], albumArtist=row['albumArtist'], fileExt=row['fileExt'], coverHash=row['coverHash'], lyricHash=row['lyricHash'])
-        _allMusicLists[-1] = MusicList(-1, 'allSong', _allMusics.keys()) #allSong list, can't be deleted and modified
+        _allMusicLists[-1] = MusicList(-1, 'allSong', _allMusics.keys())  #allSong list, can't be deleted and modified
+        self.addOnMusicAddedCallback(lambda music:_allMusicLists[-1].addMusic(music.id))
         for row in self._musicListTable.rows:
             _musicList = [int(s) for s in row['musicList'].split(',')]
             _allMusicLists[row['id']] = MusicList(row['id'], row['name'], _musicList)
 
+    # region properties
     @property
     def musicTable(self) -> Table:
         return self._musicTable
     @property
     def musicListTable(self) -> Table:
         return self._musicListTable
-
     @property
     def allMusics(self) -> Dict[int, 'Music']:
         return _allMusics
     @property
     def allMusicLists(self) -> Dict[int, 'MusicList']:
         return _allMusicLists
+    # endregion
+
+    # region callbacks
+    def addOnMusicAddedCallback(self, callback: Callable[['Music'], any]):
+        self._onMusicAdded.append(callback)
+    def removeOnMusicAddedCallback(self, callback: Callable[['Music'], any]):
+        self._onMusicAdded.remove(callback)
+    # endregion
+
     def getMusic(self, id:int)-> Union[None, 'Music']:
         try:
             return _allMusics[id]
@@ -184,13 +311,9 @@ class MusicDataManager(Manager):
         except KeyError:
             return None
 
-    def addOnMusicAddedCallback(self, callback: Callable[['Music'], any]):
-        self._onMusicAdded.append(callback)
-    def removeOnMusicAddedCallback(self, callback: Callable[['Music'], any]):
-        self._onMusicAdded.remove(callback)
-
     #save & delete
     def saveMusic(self, fileInfo:'FileInfo')-> Union[None, 'Music']:
+        '''save fail if already exist file in database or not audio file'''
         if fileInfo.fileType != FileType.AUDIO and fileInfo.fileType != Core.FileType.AUDIO:
             return None
         if localDataManager.hasFile(fileInfo.fileHash):
@@ -216,71 +339,64 @@ class MusicDataManager(Manager):
         for callback in self._onMusicAdded:
             callback(music)
         return music
-    def saveCover(self, fileInfo:'FileInfo', music:Union[int, 'Music']):
+    def saveCover(self, fileInfo:'FileInfo', music:Union[int, 'Music']=None):
         if fileInfo.fileType != Core.FileType.IMG and fileInfo.fileType != Core.FileType.IMG:
             return
         if localDataManager.hasFile(fileInfo.fileHash):
             return
         localDataManager.saveFile(fileInfo)
-        _musicID = music.id if isinstance(music, Music) else music
-        self.musicTable.update(_musicID, {'coverHash': fileInfo.fileHash})
-    def saveCover_byData(self, data, music:Union[int, 'Music']):
+        if music:
+            music = self.getMusic(music) if isinstance(music, int) else music
+            music.setCover(fileInfo.fileHash)
+    def saveCover_byData(self, data, music:Union[int, 'Music']=None):
         hash = localDataManager.saveData(data)
         if hash is None:
             return
-        _musicID = music.id if isinstance(music, Music) else music
-        self.musicTable.update(_musicID, {'coverHash': hash})
-        try:
-            _allMusics[_musicID]._coverPath = localDataManager.expectedPathByHash(hash)
-        except KeyError:
-            pass
-    def saveLyric(self, fileInfo:'FileInfo', music:Union[int, 'Music']):
+        if music:
+            music = self.getMusic(music) if isinstance(music, int) else music
+            music.setCover(hash)
+    def saveLyric(self, fileInfo:'FileInfo', music:Union[int, 'Music']=None):
         hash = localDataManager.saveFile(fileInfo)
         if hash is None:
             return
-        _musicID = music.id if isinstance(music, Music) else music
-        self.musicTable.update(_musicID, {'lyricHash': hash})
-        try:
-            _allMusics[_musicID]._lyricPath = localDataManager.expectedPathByHash(hash)
-        except KeyError:
-            pass
+        if music:
+            music = self.getMusic(music) if isinstance(music, int) else music
+            music.setLyric(hash)
     def deleteMusic(self, music:Union[int, 'Music']):
         _musicID = music if isinstance(music, int) else music.id
         _musicData = self.musicTable.get(_musicID)
-        localDataManager.deleteFile(_musicData.get('lyricHash',None)) if _musicData.get('lyricHash',None) else None
-        localDataManager.deleteFile(_musicData.get('coverHash',None)) if _musicData.get('coverHash',None) else None
+        self.deleteLyric(_musicID) #delete lyric first
+        self.deleteCover(_musicID) #delete cover first
         localDataManager.deleteFile(_musicData.get('musicHash'))
-        for musicList in _allMusicLists.values():
-            musicList.deleteMusic(_musicID) # try all
         from Core import musicPlayerManager, appManager
-        if musicPlayerManager.currentMusic.id == _musicID:
+        if musicPlayerManager.currentMusic and musicPlayerManager.currentMusic.id == _musicID:
             musicPlayerManager.clear()
         if appManager.record.lastSongIndex.value == _musicID:
             appManager.record.lastSongIndex.value = 0
             appManager.record.lastSongTime.value = 0
-        try:
-            del _allMusics[_musicID]
-        except KeyError:
-            pass
+        _music = _allMusics.pop(_musicID)
+        for callback in tuple(_music._onDeletedCallbacks):
+            callback(_music)
+        del _music
     def deleteLyric(self, music:Union[int, 'Music']):
         _musicID = music if isinstance(music, int) else music.id
         _musicData = self.musicTable.get(_musicID)
         succ = (localDataManager.deleteFile(_musicData.get('lyricHash',None)) if _musicData.get('lyricHash',None) else None)
         if succ:
+            music = _allMusics[_musicID]
             self.musicTable.update(_musicID, {'lyricHash':None})
-            try:
-                _allMusics[_musicID]._lyricPath = None
-            except KeyError:
-                pass
+            music._lyricPath = None
+            for callback in music._onLyricChangedCallbacks:
+                callback(music)
     def deleteCover(self, music:Union[int, 'Music']):
         _musicID = music if isinstance(music, int) else music.id
         _musicData = self.musicTable.get(_musicID)
         succ = (localDataManager.deleteFile(_musicData.get('coverHash',None)) if _musicData.get('coverHash',None) else None)
         if succ:
+            music = _allMusics[_musicID]
             self.musicTable.update(_musicID, {'coverHash':None})
-            try:
-                _allMusics[_musicID]._coverPath = None
-            except KeyError:
-                pass
+            music._coverPath = None
+            for callback in music._onCoverChangedCallbacks:
+                callback(music)
 
 musicDataManager = MusicDataManager()

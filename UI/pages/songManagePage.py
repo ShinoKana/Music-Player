@@ -6,19 +6,22 @@ from components import AppUploadFileArea_WithFileBox, AppSearchBar_WithDropDown,
 from Core import AutoTranslateWord, AutoTranslateWordList, musicDataManager, localDataManager, appManager
 
 class SongManagePage(AppPage):
+
     _musicBoxes: Dict[int, QWidget]  = {}
+
     def __init__(self, appWindow, parent: Union[QFrame, QLayout] = None):
         super().__init__(appWindow=appWindow, parent=parent, titleText=AutoTranslateWord("Song Manage"))
 
-        # upload area
+        # region upload area
         self.addComponent(AppTextLabel(text=AutoTranslateWord("Upload Song"),backgroundColor="transparent", textAlign="left", fontSize=20, fontBold=True))
 
         self.uploadArea = AppUploadFileArea_WithFileBox(appWindow=self.appWindow, hintText=AutoTranslateWord("Drag or click to add your song here"),
                                                    onlyAcceptFiles=tuple(FileType.AUDIO.value))
         self.uploadArea.fileBoxShowsType = False
         self.addComponent(self.uploadArea)
+        # endregion
 
-        # search bar
+        # region search bar
         self.searchBar = AppSearchBar_WithDropDown(titleText=AutoTranslateWord("Search Song"),
                                                    dropdownChoices=AutoTranslateWordList("Song Name", "Artist", "Album"),
                                                    hintText=AutoTranslateWord("enter song Name"),
@@ -29,12 +32,12 @@ class SongManagePage(AppPage):
                                                     "Artist": AutoTranslateWord('enter artist name'),
                                                     'Album':AutoTranslateWord('enter album name')}[key]))
         self.addComponent(self.searchBar)
+        # endregion
 
-
-        # song list
+        # region song list box
         self.songListBox = AppScrollBox(height=300, titleText=AutoTranslateWord("All song"))
         self.addComponent(self.songListBox)
-
+        # endregion
 
         self.uploadArea.addUploadButtonCommand(self.uploadMusicFiles)
         self.refreshSongListBox()
@@ -73,16 +76,16 @@ class SongManagePage(AppPage):
         itemBox.addText(artist, stretch=1)
         itemBox.addText(album, stretch=1)
         itemBox.addText(AutoTranslateWord('[duration]: ') + music.duration_formatted.ljust(15), stretch=1)
-        def deleteMusic(music):
-            musicDataManager.deleteMusic(music)
-            self.songListBox.removeComponent(self._musicBoxes[music.id])
-            del self._musicBoxes[music.id]
-            self.appWindow.toast(AutoTranslateWord(f"[Music]: {music._title} [deleted successfully]"))
+        def deleteMusic(_music):
+            musicDataManager.deleteMusic(_music)
+            self.appWindow.toast(AutoTranslateWord(f"[Music]: {_music._title} [deleted successfully]"))
         itemBox.addButton(AutoTranslateWord('delete'), appManager.getUIImagePath('cross.png'),
                           command=lambda : deleteMusic(music))
+
         itemBox.adjustSize()
         setattr(itemBox,'_music',music)
         self._musicBoxes[music.id] = self.songListBox.addComponent(itemBox, order=order)
+        music.addOnDeletedCallback(lambda _music:self.songListBox.removeComponent(itemBox))
 
     def onSearch(self, text: str, dropdownKey: str):
         texts = text.lower().split(' ')
@@ -114,8 +117,3 @@ class SongManagePage(AppPage):
             if id not in self._musicBoxes:
                 self.addMusicBoxToSongListBox(music)
         self.songListBox.expandLayout._widgets.sort(key=lambda x: x._music.id)
-
-    def onSwitchIn(self):
-        pass
-    def onSwitchOut(self):
-        pass

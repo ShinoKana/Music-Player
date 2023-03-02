@@ -73,25 +73,32 @@ class AppPage(ScrollArea):
                                                     self.__margins['right'], self.__margins['bottom'])
         else:
             raise ValueError('margins must be tuple or 4 int')
+
     def onSwitchIn(self):
         pass
     def onSwitchOut(self):
         pass
+
     def resizeEvent(self, e):
         ''' override resizeEvent of QScrollArea '''
         self.scrollWidget.resize(self.width(), self.scrollWidget.height())
         super().resizeEvent(e)
-    def addComponent(self, component:Union[QWidget, QLayout]):
+
+    def addComponent(self, component:Union[QWidget, QLayout], expandWidth=False):
         try:
             component.appWindow = self.appWindow
         except:
             pass
         if isinstance(component, QWidget):
             component.setParent(self.scrollWidget)
+            if expandWidth:
+                component.setMinimumWidth(self.appWindow.APP_PAGE_DEFAULT_SIZE[0] - self.__margins['left'] - self.__margins['right'])
             self.expandLayout.addWidget(component)
         elif isinstance(component, QLayout):
             newWidget = QWidget(self.scrollWidget)
             newWidget.setLayout(component)
+            if expandWidth:
+                newWidget.setMinimumWidth(self.appWindow.APP_PAGE_DEFAULT_SIZE[0] - self.__margins['left'] - self.__margins['right'])
             newWidget.adjustSize()
             self.expandLayout.addWidget(newWidget)
         else:

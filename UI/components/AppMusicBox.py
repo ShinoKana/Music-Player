@@ -65,11 +65,20 @@ class AppMusicBox(AppWidget(QWidget)):
             slider = AppSlider(parent=box, direction='Horizontal', minimum=0, maximum=100)
             slider.setValue(self.mediaPlayer.volume)
             slider.valueChanged.connect(self.mediaPlayer.setVolume)
+            def changVolumnIcon(value):
+                if value==0:
+                    self.soundButton.setIcon(appManager.getUIImagePath('sound0.png'))
+                elif value<30:
+                    self.soundButton.setIcon(appManager.getUIImagePath('sound1.png'))
+                elif value<70:
+                    self.soundButton.setIcon(appManager.getUIImagePath('sound2.png'))
+                else:
+                    self.soundButton.setIcon(appManager.getUIImagePath('sound3.png'))
+            slider.valueChanged.connect(changVolumnIcon)
             box.addWidget(slider)
             valueLabel = box.addText(str(self.mediaPlayer.volume))
             slider.valueChanged.connect(lambda value: valueLabel.setText(str(value)))
             box.adjustSize()
-
             box.show()
             box.raise_()
             box.move(self.soundButton.pos())
@@ -101,8 +110,8 @@ class AppMusicBox(AppWidget(QWidget)):
             def onMusicChanged(music):
                 self.progressSlider.setMaximum(music.duration)
                 self.SetTitle(music.title or AutoTranslateWord('Unknown'))
-                artistText = music.artist or music.albumArtist
-                self.SetArtist(artistText) if artistText else AutoTranslateWord('Unknown')
+                artistText = (music.artist or music.albumArtist) or AutoTranslateWord('Unknown')
+                self.SetArtist(artistText)
                 self.SetIcon(music.coverPath) if music.coverPath else None
             self.mediaPlayer.addOnMusicChanged(onMusicChanged)
 

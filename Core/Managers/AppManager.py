@@ -223,7 +223,7 @@ class RecordManager(AppRecord, Manager):
     unfoldingSongList = RecordItem("music", "unfoldingSongList", "-1", AppRecordValidator())
     def __init__(self):
         AppRecord.__init__(self, APP_RECORD_PATH)
-        self._temperateRecord = None
+        self._temperateRecord = {}
         self.load()
     def __del__(self):
         self.save()
