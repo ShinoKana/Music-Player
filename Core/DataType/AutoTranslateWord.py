@@ -5,7 +5,9 @@ class AutoTranslateWord(str):
     '''auto translate word'''
     def __new__(cls, s):
         if isinstance(s, str):
-            return super().__new__(cls, Core.appManager.translate(s))
+            obj = super().__new__(cls, Core.appManager.translate(s))
+            obj.__qualname__ = "AutoTranslateWord"
+            return obj
         else:
             raise Exception("AutoTranslateWord only accept str as input")
     def __init__(self, rawText:str):
@@ -26,7 +28,9 @@ class AutoTranslateWord(str):
 class AutoTranslateWordList(list):
     '''auto translate word list'''
     def __new__(cls, *args, **kwargs):
-        return super().__new__(cls, *args, **kwargs)
+        obj = super().__new__(cls, *args, **kwargs)
+        obj.__qualname__ = "AutoTranslateWordList"
+        return obj
     def __init__(self, *args):
         if len(args) == 1 and (isinstance(args[0], list) or isinstance(args[0], tuple)):
             super().__init__([Core.appManager.translate(text) for text in args[0]])
@@ -49,6 +53,7 @@ from enum import Enum
 from types import DynamicClassAttribute
 class AutoTranslateEnum(Enum):
     '''auto translate word enum'''
+    __qualname__ = "AutoTranslateEnum"
     @DynamicClassAttribute
     def name(self):
         return Core.appManager.translate(self._name_)

@@ -51,7 +51,7 @@ class AppDropDown(AppWidget(QComboBox)):
     def currentChoiceText(self:DropDownHint, text:str):
         self.SetCurrentChoice_byText(text)
     def AddChoices(self:DropDownHint, choices: Union[AutoTranslateWordList,Sequence[Union[AutoTranslateWord,str]]]):
-        if isinstance(choices, AutoTranslateWordList):
+        if choices.__qualname__ == 'AutoTranslateWordList':
             self.__choiceKeys += choices.rawTextList
             self.__choiceTexts += choices.getTranslations()
             self.addItems(self.__choiceTexts)
@@ -66,7 +66,7 @@ class AppDropDown(AppWidget(QComboBox)):
                     self.__choiceTexts.append(choice)
                     self.addItem(choice)
     def AddChoice(self:DropDownHint, choice: Union[AutoTranslateWord,str]):
-        if isinstance(choice, AutoTranslateWord):
+        if choice.__qualname__ == 'AutoTranslateWord':
             self.__choiceKeys.append(choice.rawText)
             self.__choiceTexts.append(choice.getTranslation())
             self.addItem(self.__choiceTexts[-1])
@@ -75,7 +75,7 @@ class AppDropDown(AppWidget(QComboBox)):
             self.__choiceTexts.append(choice)
             self.addItem(choice)
     def RemoveChoice(self:DropDownHint, choice: Union[AutoTranslateWord,str]):
-        if isinstance(choice, AutoTranslateWord):
+        if choice.__qualname__ == 'AutoTranslateWord':
             self.removeItem(self.__choiceTexts.index(choice.rawText))
             self.__choiceKeys.remove(choice.rawText)
             self.__choiceTexts.remove(choice.getTranslation())
