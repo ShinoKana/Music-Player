@@ -1,8 +1,8 @@
-import wave
-import pyaudio
+import binascii
 import io
-import struct
-
+import wave
+import audioop
+import platform
 from PySide2.QtMultimedia import QMediaPlayer, QMediaPlaylist
 from Core import appManager, musicDataManager, MusicList
 from typing import Literal
@@ -22,7 +22,6 @@ class MusicPlayerManager(Manager, QMediaPlayer):
         self.playMode = appManager.record.musicPlayMode.value
         self.volume = appManager.record.soundVolume.value
         self._currentMusic = musicDataManager.getMusic(appManager.record.lastSongIndex.value)
-        self.py_audio = pyaudio.PyAudio()
 
         #playlist
         def playlistMusicRemovedCallback(music:'Music'):
@@ -37,15 +36,17 @@ class MusicPlayerManager(Manager, QMediaPlayer):
         self._playlist = musicDataManager.getMusicList(appManager.record.lastSongList.value)
         self.setPlaylist(self._playlist) #playlist must not None
         self._playlist.setPlaybackMode(self.QTplayMode)
+        self._playlist.currentIndexChanged.connect(self.onMediaChanged)
+
         if self._currentMusic is not None:
             self._playlist.setCurrentIndex(self._playlist._musicIDs.index(self._currentMusic._id))
         self.setPosition(appManager.record.lastSongTime.value)
+        
         def onMediaChanged(self):
+            QMediaPlayer.stop(self)
             self._currentMusic = self._playlist.currentMusic
-            wav_data = self.read_wav_file(self._currentMusic.filepath)
-            self.play_wav_file(wav_data)
-            for func in self._onMusicChanged:
-                func(self._currentMusic)
+            wav_info = self.get_wav_info(self._currentMusic.filepath)
+            self.play_wav_data(wav_info["data"], wav_info["SampleRate"], wav_info["NumChannels"], wav_info["BitsPerSample"])
         self.currentMediaChanged.connect(lambda media: onMediaChanged())
 
     def __del__(self):
@@ -53,44 +54,60 @@ class MusicPlayerManager(Manager, QMediaPlayer):
         appManager.record.lastSongIndex.value = self._currentMusic._id if self._currentMusic is not None else 0
         appManager.record.lastSongList.value = self._playlist._id if self._playlist is not None else -1
 
-    def read_wav_file(self, file_path):
-        with open(file_path, 'rb') as f:
-            # Read RIFF chunk descriptor
-            riff, chunk_size, wave = struct.unpack('<4sI4s', f.read(12))
+    def hex2dec(self, hex, rev=True):
+        if rev:
+            hex = str(hex)[2:-1]
+            new_hex = ''.join(reversed([hex[i:i+2] for i in range(0, len(hex), 2)]))
+            new_hex = "0X" + new_hex
+        else:
+            new_hex = hex
+        result_dec = int(new_hex, 16)
+        return result_dec
 
-            # Read fmt sub-chunk
-            sub_chunk1_id, sub_chunk1_size = struct.unpack('<4sI', f.read(8))
-            assert sub_chunk1_id == b'fmt '
+    def get_wav_info(self, filename):
+        info = dict()
+        with open(filename, mode="rb") as f:
+            info["ChunkID"] = f.read(4)
+            if info["ChunkID"] != b'RIFF':
+                raise ValueError("Invalid WAV file: file does not start with RIFF id")
+            info["ChunkSize"] = self.hex2dec(binascii.hexlify(f.read(4)))
+            info["Format"] = f.read(4)
+            info["Subchunk1ID"] = f.read(4)
+            info["Subchunk1Size"] = self.hex2dec(binascii.hexlify(f.read(4)))
+            info["AudioFormat"] = self.hex2dec(binascii.hexlify(f.read(2)))
+            info["NumChannels"] = self.hex2dec(binascii.hexlify(f.read(2)))
+            info["SampleRate"] = self.hex2dec(binascii.hexlify(f.read(4)))
+            info["ByteRate"] = self.hex2dec(binascii.hexlify(f.read(4)))
+            info["BlockAlign"] = self.hex2dec(binascii.hexlify(f.read(2)))
+            info["BitsPerSample"] = self.hex2dec(binascii.hexlify(f.read(2)))
+            info["Subchunk2ID"] = f.read(4)
+            info["Subchunk2Size"] = self.hex2dec(binascii.hexlify(f.read(4)))
+            info["data"] = f.read(info["Subchunk2Size"])
+        return info
 
-            fmt_data = f.read(sub_chunk1_size)
-            audio_format, num_channels, sample_rate, byte_rate, block_align, bits_per_sample = struct.unpack('<HHIIHH', fmt_data)
+    def onMediaChanged(self):
+        self._currentMusic = self._playlist.currentMusic
+        wav_info = self.get_wav_info(self._currentMusic.filePath)
+        self.play_wav_data(wav_info["data"], wav_info["SampleRate"], wav_info["NumChannels"], wav_info["BitsPerSample"])
 
-            # Read data sub-chunk
-            while True:
-                sub_chunk2_id = f.read(4)
-                if sub_chunk2_id == b'data':
-                    sub_chunk2_size = struct.unpack('<I', f.read(4))[0]
-                    break
-                else:
-                    f.seek(-3, io.SEEK_CUR)
+    
+    def play_wav_data(self, wav_data, sample_rate, num_channels, bits_per_sample):
+        with io.BytesIO(wav_data) as wf:
+            wav_file = wave.open(wf, 'rb')
 
-            audio_data = f.read(sub_chunk2_size)
+            if platform.system() == 'Windows':
+                import winsound
+                winsound.PlaySound(wf, winsound.SND_MEMORY)
+            else:
+                import ossaudiodev
 
-        return audio_data
+                audio = ossaudiodev.open('w')
+                audio.setparameters(ossaudiodev.AFMT_S16_NE, num_channels, sample_rate)
+                audio.write(wav_file.readframes(wav_file.getnframes()))
 
-    def play_wav_file(self, wav_file_data):
-        with wave.open(io.BytesIO(wav_file_data), 'rb') as wf:
-            stream = self.py_audio.open(format=self.py_audio.get_format_from_width(wf.getsampwidth()),
-                                        channels=wf.getnchannels(),
-                                        rate=wf.getframerate(),
-                                        output=True)
-            data = wf.readframes(1024)
-            while data:
-                stream.write(data)
-                data = wf.readframes(1024)
+                audio.close()
 
-            stream.stop_stream()
-            stream.close()
+            wav_file.close()
 
     # region callbacks
     def addOnMusicChanged(self, func) -> None:
