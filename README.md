@@ -6,6 +6,7 @@ CUHK22-23 CSCI3280 Group Project
 * [ ] 歌词滚动
 * [ ] cd封面
 * [ ] 歌曲动效（参考网易云）
+* [ ] 徒手wav解码
 
 ### 需要安裝的package
     * PySide2 (UI庫， 相當於PYQT5，但許可更寬鬆)
