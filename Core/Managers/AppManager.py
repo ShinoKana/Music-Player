@@ -1,6 +1,9 @@
+# -*- coding:utf-8 -*-
+
 import os, re, json
+import sys
 from enum import Enum
-from typing import Dict, List
+from typing import Dict, List, Union
 from pathlib import Path
 
 from PySide2.QtGui import QColor
@@ -9,15 +12,29 @@ from ExternalPackage.qfluentwidgets.common import (ConfigValidator, OptionsConfi
                             ConfigItem, ConfigSerializer, ColorValidator, exceptionHandler, ColorSerializer,
                             RangeValidator, QConfig, qconfig)
 #path
-RESOURCE_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..','..', "Resources")
-RESOURCE_IMAGE_PATH = os.path.join(RESOURCE_PATH, "images")
-TRANSLATION_DATA_PATH = os.path.join(RESOURCE_PATH,"translation.csv")
-APP_SETTING_PATH = os.path.join(RESOURCE_PATH, 'appSetting.json')
-APP_RECORD_PATH = os.path.join(RESOURCE_PATH, 'appRecord.json')
-APP_TEMP_RECORD_PATH = os.path.join(RESOURCE_PATH, 'appTempRecord.json')
+def _getPathBytes(path:Union[str, bytes, Path])->bytes:
+    encode = sys.getdefaultencoding()
+    if isinstance(path, str):
+        _path = path.encode(encode)
+    elif isinstance(path, bytes):
+        _path = path
+    elif isinstance(path, Path):
+        _path = path.as_posix().encode(encode)
+    else:
+        raise TypeError(f'path must be str, bytes or Path, not {type(path)}')
+    return _path
 
-DATA_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..', "Data")
-DATABASE_PATH = os.path.join(DATA_PATH, "database.db")
+_RESOURCE_PATH_str = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..','..', "Resources")
+RESOURCE_PATH = _getPathBytes(_RESOURCE_PATH_str)
+RESOURCE_IMAGE_PATH = _getPathBytes(os.path.join(_RESOURCE_PATH_str, "images"))
+TRANSLATION_DATA_PATH = _getPathBytes(os.path.join(_RESOURCE_PATH_str, "translation.csv"))
+APP_SETTING_PATH = _getPathBytes(os.path.join(_RESOURCE_PATH_str, 'appSetting.json'))
+APP_RECORD_PATH = _getPathBytes(os.path.join(_RESOURCE_PATH_str, 'appRecord.json'))
+APP_TEMP_RECORD_PATH = _getPathBytes(os.path.join(_RESOURCE_PATH_str, 'appTempRecord.json'))
+
+_DATA_PATH_str = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..', "Data")
+DATA_PATH = _getPathBytes(_DATA_PATH_str)
+DATABASE_PATH = _getPathBytes(os.path.join(_DATA_PATH_str, "database.db"))
 
 #config
 class NumberValidator(ConfigValidator):
@@ -62,7 +79,7 @@ class ConfigManager(QConfig, Manager):
         self.languageConfig.validator = OptionsValidator(self._languages)
         # setting
         self._cfg = self
-        self.file = Path(APP_SETTING_PATH)
+        self.file = Path(APP_SETTING_PATH.decode(sys.getdefaultencoding()))
         qconfig.load(APP_SETTING_PATH, self)
         self._currentLanguage = self._languages.index(self.languageConfig.value)
         for name in dir(self.__class__):
@@ -153,9 +170,13 @@ class ColorRecordItem(RecordItem):
         return f'{self.__class__.__name__}[value={self.value.name()}]'
 class AppRecord(QObject):
     """ Record of app """
-    def __init__(self, recordPath:str):
+    def __init__(self, recordPath:Union[str, bytes]):
         super().__init__()
-        self.file = Path(recordPath)
+        if isinstance(recordPath, bytes):
+            _recordPath = recordPath.decode(sys.getdefaultencoding())
+        else:
+            _recordPath = recordPath
+        self.file = Path(_recordPath)
         for name in dir(self.__class__):
             value = getattr(self.__class__, name)
             if isinstance(value, RecordItem):
@@ -305,35 +326,35 @@ class AppManager(Manager):
     @property
     def RESOURCE_PATH(self):
         '''path to "Resources" file'''
-        return RESOURCE_PATH
+        return RESOURCE_PATH.decode(sys.getfilesystemencoding())
     @property
     def RESOURCE_IMAGE_PATH(self):
         '''path to "Resources/images" file'''
-        return RESOURCE_IMAGE_PATH
+        return RESOURCE_IMAGE_PATH.decode(sys.getfilesystemencoding())
     @property
     def TRANSLATION_DATA_PATH(self):
         '''path to "Resources/translation.csv" file'''
-        return TRANSLATION_DATA_PATH
+        return TRANSLATION_DATA_PATH.decode(sys.getfilesystemencoding())
     @property
     def APP_SETTING_PATH(self):
         '''path to "Resources/appSetting.json" file'''
-        return APP_SETTING_PATH
+        return APP_SETTING_PATH.decode(sys.getfilesystemencoding())
     @property
     def APP_RECORD_PATH(self):
         '''path to "Resources/appRecord.json" file'''
-        return APP_RECORD_PATH
+        return APP_RECORD_PATH.decode(sys.getfilesystemencoding())
     @property
     def APP_TEMP_RECORD_PATH(self):
         '''path to "Resources/appTempRecord.json" file'''
-        return APP_TEMP_RECORD_PATH
+        return APP_TEMP_RECORD_PATH.decode(sys.getfilesystemencoding())
     @property
     def DATA_PATH(self):
         '''path to "Data" file'''
-        return DATA_PATH
+        return DATA_PATH.decode(sys.getfilesystemencoding())
     @property
     def DATABASE_PATH(self):
         '''path to "Data/database.db" file'''
-        return DATABASE_PATH
+        return DATABASE_PATH.decode(sys.getfilesystemencoding())
 
     def translate(self, text, targetLanguage:str = None) -> str:
         if targetLanguage is not None and targetLanguage not in self.config.languages:
@@ -358,7 +379,7 @@ class AppManager(Manager):
         iconColor = "white" if not self.config.isLightTheme() else "black"
         return f':/qfluentwidgets/images/setting_card/{icon.value}_{iconColor}.png'
     def getUIImagePath(self, fileName: str):
-        imgPath = os.path.join(RESOURCE_IMAGE_PATH, fileName)
+        imgPath = os.path.join(RESOURCE_IMAGE_PATH.decode(sys.getfilesystemencoding()), fileName)
         if not os.path.exists(imgPath):
             print(f"Image file not found: {imgPath}")
             return None
