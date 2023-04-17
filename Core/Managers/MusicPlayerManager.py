@@ -1,7 +1,13 @@
+import wave
+import pyaudio
+import io
+import struct
+
 from PySide2.QtMultimedia import QMediaPlayer, QMediaPlaylist
 from Core import appManager, musicDataManager, MusicList
 from typing import Literal
 from .Manager import *
+
 
 class MusicPlayerManager(Manager, QMediaPlayer):
 
@@ -16,6 +22,7 @@ class MusicPlayerManager(Manager, QMediaPlayer):
         self.playMode = appManager.record.musicPlayMode.value
         self.volume = appManager.record.soundVolume.value
         self._currentMusic = musicDataManager.getMusic(appManager.record.lastSongIndex.value)
+        self.py_audio = pyaudio.PyAudio()
 
         #playlist
         def playlistMusicRemovedCallback(music:'Music'):
@@ -33,8 +40,10 @@ class MusicPlayerManager(Manager, QMediaPlayer):
         if self._currentMusic is not None:
             self._playlist.setCurrentIndex(self._playlist._musicIDs.index(self._currentMusic._id))
         self.setPosition(appManager.record.lastSongTime.value)
-        def onMediaChanged():
+        def onMediaChanged(self):
             self._currentMusic = self._playlist.currentMusic
+            wav_data = self.read_wav_file(self._currentMusic.filepath)
+            self.play_wav_file(wav_data)
             for func in self._onMusicChanged:
                 func(self._currentMusic)
         self.currentMediaChanged.connect(lambda media: onMediaChanged())
@@ -43,6 +52,45 @@ class MusicPlayerManager(Manager, QMediaPlayer):
         appManager.record.lastSongTime.value = self.position()
         appManager.record.lastSongIndex.value = self._currentMusic._id if self._currentMusic is not None else 0
         appManager.record.lastSongList.value = self._playlist._id if self._playlist is not None else -1
+
+    def read_wav_file(self, file_path):
+        with open(file_path, 'rb') as f:
+            # Read RIFF chunk descriptor
+            riff, chunk_size, wave = struct.unpack('<4sI4s', f.read(12))
+
+            # Read fmt sub-chunk
+            sub_chunk1_id, sub_chunk1_size = struct.unpack('<4sI', f.read(8))
+            assert sub_chunk1_id == b'fmt '
+
+            fmt_data = f.read(sub_chunk1_size)
+            audio_format, num_channels, sample_rate, byte_rate, block_align, bits_per_sample = struct.unpack('<HHIIHH', fmt_data)
+
+            # Read data sub-chunk
+            while True:
+                sub_chunk2_id = f.read(4)
+                if sub_chunk2_id == b'data':
+                    sub_chunk2_size = struct.unpack('<I', f.read(4))[0]
+                    break
+                else:
+                    f.seek(-3, io.SEEK_CUR)
+
+            audio_data = f.read(sub_chunk2_size)
+
+        return audio_data
+
+    def play_wav_file(self, wav_file_data):
+        with wave.open(io.BytesIO(wav_file_data), 'rb') as wf:
+            stream = self.py_audio.open(format=self.py_audio.get_format_from_width(wf.getsampwidth()),
+                                        channels=wf.getnchannels(),
+                                        rate=wf.getframerate(),
+                                        output=True)
+            data = wf.readframes(1024)
+            while data:
+                stream.write(data)
+                data = wf.readframes(1024)
+
+            stream.stop_stream()
+            stream.close()
 
     # region callbacks
     def addOnMusicChanged(self, func) -> None:
