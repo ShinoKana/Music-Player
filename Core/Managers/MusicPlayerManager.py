@@ -45,9 +45,9 @@ class MusicPlayerManager(Manager, QMediaPlayer):
         def onMediaChanged(self):
             QMediaPlayer.stop(self)
             self._currentMusic = self._playlist.currentMusic
-            wav_info = self.get_wav_info(self._currentMusic.filepath)
+            wav_info = self.get_wav_info(self._currentMusic.filePath)
             self.play_wav_data(wav_info["data"], wav_info["SampleRate"], wav_info["NumChannels"], wav_info["BitsPerSample"])
-        self.currentMediaChanged.connect(lambda media: onMediaChanged())
+        self.currentMediaChanged.connect(lambda media: onMediaChanged(self))
 
     def __del__(self):
         appManager.record.lastSongTime.value = self.position()
