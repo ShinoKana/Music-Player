@@ -64,4 +64,3 @@ class PlayerPage(AppPage):
             
     def onSwitchOut(self):
         pass;
-

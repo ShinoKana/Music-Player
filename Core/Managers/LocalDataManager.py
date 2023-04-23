@@ -1,4 +1,4 @@
-import os, shutil, hashlib, sys
+import os, shutil, hashlib
 from typing import Tuple, Sequence, Union
 from ExternalPackage.sqlite_utils import Database, Table
 from Core import appManager
@@ -10,6 +10,7 @@ class LocalDataManager(Manager):
         if not os.path.exists(appManager.DATABASE_PATH):
             #create database.db file if not exists
             with open(appManager.DATABASE_PATH, 'w') as f:
+                f.write("")
                 f.close()
         self._database = Database(appManager.DATABASE_PATH)
         self._database.setForeignKeyRestrict(True)

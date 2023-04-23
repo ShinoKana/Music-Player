@@ -125,7 +125,7 @@ class SongListPage(AppPage):
         itemBox = self._allSongListBox[lst._id].getComponentByIndex(itemBoxIndex)
         if musicPlayerManager.currentMusic is not None:
             if musicPlayerManager.currentMusic.id == musicID and musicPlayerManager.currentMusicList.id == lstID:
-                musicPlayerManager.pause() if musicPlayerManager.state() == musicPlayerManager.PlayingState else musicPlayerManager.play()
+                musicPlayerManager.pause() if musicPlayerManager.isPlaying() else musicPlayerManager.play()
                 return
         if musicPlayerManager.currentMusicList.id == lstID:
             musicPlayerManager.setPlaylist(lst)

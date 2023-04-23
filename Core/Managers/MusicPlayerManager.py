@@ -1,15 +1,13 @@
-import binascii
-import io
-import wave
-import audioop
-import platform
 from PySide2.QtMultimedia import QMediaPlayer, QMediaPlaylist
 from Core import appManager, musicDataManager, MusicList
+from PySide2.QtCore import Signal
 from typing import Literal
 from .Manager import *
+from Core.Media.EXPlayer import *
 
 
-class MusicPlayerManager(Manager, QMediaPlayer):
+# Changed the inheritance of QMediaPlay to EXPlayer, and EXPlayer calls QMediaPlayer and WavPlayer in a combined way
+class MusicPlayerManager(Manager, EXPlayer):
 
     _playlist: MusicList = None
     _onPlayModeChanged = []
@@ -18,11 +16,8 @@ class MusicPlayerManager(Manager, QMediaPlayer):
     _onClear = []
 
     def __init__(self):
-        QMediaPlayer.__init__(self)
-        self.playMode = appManager.record.musicPlayMode.value
-        self.volume = appManager.record.soundVolume.value
+        EXPlayer.__init__(self, musicDataManager.getMusicList(appManager.record.lastSongList.value), appManager.record.lastSongTime.value)
         self._currentMusic = musicDataManager.getMusic(appManager.record.lastSongIndex.value)
-
         #playlist
         def playlistMusicRemovedCallback(music:'Music'):
             if self._currentMusic == music:
@@ -31,83 +26,28 @@ class MusicPlayerManager(Manager, QMediaPlayer):
                     self.stop()
                 except:
                     self.clear()
+
         self.playlisyMusicRemovedCallback = playlistMusicRemovedCallback
         #TODO callback for whole playlist deleted
         self._playlist = musicDataManager.getMusicList(appManager.record.lastSongList.value)
-        self.setPlaylist(self._playlist) #playlist must not None
         self._playlist.setPlaybackMode(self.QTplayMode)
-        self._playlist.currentIndexChanged.connect(self.onMediaChanged)
-
         if self._currentMusic is not None:
             self._playlist.setCurrentIndex(self._playlist._musicIDs.index(self._currentMusic._id))
-        self.setPosition(appManager.record.lastSongTime.value)
-        
-        def onMediaChanged(self):
-            QMediaPlayer.stop(self)
+
+        self.volume = appManager.record.soundVolume.value
+        self.playMode = appManager.record.musicPlayMode.value
+
+        def onMediaChanged():
             self._currentMusic = self._playlist.currentMusic
-            wav_info = self.get_wav_info(self._currentMusic.filePath)
-            self.play_wav_data(wav_info["data"], wav_info["SampleRate"], wav_info["NumChannels"], wav_info["BitsPerSample"])
-        self.currentMediaChanged.connect(lambda media: onMediaChanged(self))
+            for func in self._onMusicChanged:
+                func(self._currentMusic)
+        self.currentMediaChanged.connect(lambda media: onMediaChanged())
 
     def __del__(self):
-        appManager.record.lastSongTime.value = self.position()
+        appManager.record.lastSongTime.value = self.position
         appManager.record.lastSongIndex.value = self._currentMusic._id if self._currentMusic is not None else 0
         appManager.record.lastSongList.value = self._playlist._id if self._playlist is not None else -1
-
-    def hex2dec(self, hex, rev=True):
-        if rev:
-            hex = str(hex)[2:-1]
-            new_hex = ''.join(reversed([hex[i:i+2] for i in range(0, len(hex), 2)]))
-            new_hex = "0X" + new_hex
-        else:
-            new_hex = hex
-        result_dec = int(new_hex, 16)
-        return result_dec
-
-    def get_wav_info(self, filename):
-        info = dict()
-        with open(filename, mode="rb") as f:
-            info["ChunkID"] = f.read(4)
-            if info["ChunkID"] != b'RIFF':
-                raise ValueError("Invalid WAV file: file does not start with RIFF id")
-            info["ChunkSize"] = self.hex2dec(binascii.hexlify(f.read(4)))
-            info["Format"] = f.read(4)
-            info["Subchunk1ID"] = f.read(4)
-            info["Subchunk1Size"] = self.hex2dec(binascii.hexlify(f.read(4)))
-            info["AudioFormat"] = self.hex2dec(binascii.hexlify(f.read(2)))
-            info["NumChannels"] = self.hex2dec(binascii.hexlify(f.read(2)))
-            info["SampleRate"] = self.hex2dec(binascii.hexlify(f.read(4)))
-            info["ByteRate"] = self.hex2dec(binascii.hexlify(f.read(4)))
-            info["BlockAlign"] = self.hex2dec(binascii.hexlify(f.read(2)))
-            info["BitsPerSample"] = self.hex2dec(binascii.hexlify(f.read(2)))
-            info["Subchunk2ID"] = f.read(4)
-            info["Subchunk2Size"] = self.hex2dec(binascii.hexlify(f.read(4)))
-            info["data"] = f.read(info["Subchunk2Size"])
-        return info
-
-    def onMediaChanged(self):
-        self._currentMusic = self._playlist.currentMusic
-        wav_info = self.get_wav_info(self._currentMusic.filePath)
-        self.play_wav_data(wav_info["data"], wav_info["SampleRate"], wav_info["NumChannels"], wav_info["BitsPerSample"])
-
-    
-    def play_wav_data(self, wav_data, sample_rate, num_channels, bits_per_sample):
-        with io.BytesIO(wav_data) as wf:
-            wav_file = wave.open(wf, 'rb')
-
-            if platform.system() == 'Windows':
-                import winsound
-                winsound.PlaySound(wf, winsound.SND_MEMORY)
-            else:
-                import ossaudiodev
-
-                audio = ossaudiodev.open('w')
-                audio.setparameters(ossaudiodev.AFMT_S16_NE, num_channels, sample_rate)
-                audio.write(wav_file.readframes(wav_file.getnframes()))
-
-                audio.close()
-
-            wav_file.close()
+        self.stop() # must stop to kill the thread
 
     # region callbacks
     def addOnMusicChanged(self, func) -> None:
@@ -137,9 +77,9 @@ class MusicPlayerManager(Manager, QMediaPlayer):
         return self._playlist
     @currentMusicList.setter
     def currentMusicList(self, playlist: MusicList) -> None:
-        self.setPlaylist(playlist)
+        EXPlayer._setPlaylist(playlist)
     def setPlaylist(self, playlist: MusicList) -> None:
-        QMediaPlayer.setPlaylist(self, playlist)
+        EXPlayer._setPlaylist(self, playlist)
         if self._playlist:
             self._playlist.removeOnMusicRemovedCallback(self.playlisyMusicRemovedCallback)
         self._playlist = playlist
@@ -176,7 +116,7 @@ class MusicPlayerManager(Manager, QMediaPlayer):
     @volume.setter
     def volume(self, volume:int) -> None:
         appManager.record.soundVolume.value = volume
-        QMediaPlayer.setVolume(self, self.volume)
+        EXPlayer.setVolume(self, self.volume)
     def setVolume(self, volume:int) -> None:
         '''override QMediaPlayer.setVolume'''
         self.volume = volume
@@ -194,11 +134,15 @@ class MusicPlayerManager(Manager, QMediaPlayer):
             self._playlist.setCurrentIndex(0)
         else:
             self._playlist.next()
+        self.stop()
+        self.play()
     def goPreviousMusic(self) -> None:
         if self.playMode == 'listLoop' and self._playlist.currentIndex() == 0:
             self._playlist.setCurrentIndex(self._playlist.mediaCount() - 1)
         else:
             self._playlist.previous()
+        self.stop()
+        self.play()
     # endregion
 
 musicPlayerManager = MusicPlayerManager()

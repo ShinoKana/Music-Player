@@ -2,10 +2,11 @@ from qfluentwidgets import Slider
 from .AppWidget import AppWidget, AppWidgetHintClass
 from typing import Union, Literal, Callable
 from Core import appManager
-from PySide2.QtCore import Qt
+from PySide2.QtCore import Qt, Signal
 
 sliderHint = Union[Slider, AppWidgetHintClass,'AppSlider']
 class AppSlider(AppWidget(Slider)):
+    jumpPress = Signal()
     def __init__(self:sliderHint, *args, direction:Literal['Horizontal', 'Vertical']= 'Horizontal',
                  onValueChanged:Callable[[Union[int, float]],any]=None, minimum=0, maximum=100,
                  value=None, **kwargs):
@@ -23,6 +24,18 @@ class AppSlider(AppWidget(Slider)):
             self.setValue(value)
         else:
             self.setValue(minimum)
+
+    def mouseReleaseEvent(self, ev):
+        """ Jump to click position """
+        if ev.button() == Qt.LeftButton:
+            if self.orientation == Qt.Vertical:
+                self.setValue(self.minimum() + ((self.maximum()-self.minimum()) * (self.height()-ev.y())) / self.height() ) ;
+            else:
+                self.setValue(self.minimum() + ((self.maximum()-self.minimum()) * ev.x()) / self.width() ) ;
+            ev.accept()
+            self.jumpPress.emit()
+        super().mouseReleaseEvent(ev)
+
     def changeStyle(self:sliderHint, styleKey, value):
         '''override appwidget method'''
         super().changeStyle(styleKey, value)

@@ -7,8 +7,11 @@ sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)),"UI"))
 from ExternalPackage import dpi_manager
 from PySide2.QtCore import Qt
 from PySide2.QtWidgets import QApplication
+# useful debug lib
+#import faulthandler
 
 if __name__ == '__main__':
+    #faulthandler.enable()
 
     # enable high dpi scale
     os.environ["QT_ENABLE_HIGHDPI_SCALING"] = "0"

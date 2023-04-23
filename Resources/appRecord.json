@@ -2,8 +2,8 @@
     "music": {
         "lastSongIndex": 0,
         "lastSongList": -1,
-        "lastSongTime": 44995,
-        "playMode": "random",
+        "lastSongTime": 3076,
+        "playMode": "listLoop",
         "unfoldingSongList": "-1"
     },
     "system": {

@@ -8,7 +8,7 @@ from typing import Callable, Union, List, Dict, Sequence
 import re
 
 from PySide2.QtCore    import Qt, Signal
-from PySide2.QtWidgets import QWidget, QVBoxLayout, QLabel,QFileDialog
+from PySide2.QtWidgets import QWidget, QVBoxLayout, QLabel, QFileDialog, QDialog
 from PySide2.QtGui     import QColor, QPainter, QPen, QBrush, QDropEvent
 from ExternalPackage import ImageBox
 
@@ -140,9 +140,24 @@ class AppUploadFileArea(AppWidget(DragDropFile)):
         clickAddFileHint = clickAddFileHintText if clickAddFileHintText else AutoTranslateWord('Select one or more files to open')
         acceptFiles = 'All Files (*);;'+ ';;'.join([f'{fileType} {AutoTranslateWord("file")} (*.{fileType})' for fileType in onlyAcceptFiles]) if len(onlyAcceptFiles)>0 else 'All Files (*);;'
         def clickToAddFile():
-            filepath = QFileDialog.getOpenFileNames(self, clickAddFileHint, '', acceptFiles)
-            if len(filepath[0]) > 0:
-                for path in filepath[0]:
+            ## 因为qt6.2之前有bug
+            ## https://bugreports.qt.io/browse/PYSIDE-1792
+            ## 如果用静态方法直接建立QFileDialog会导致其它线程无法得到正常的调度。所以这里改成了这个，或者使用Pyside6也可以解决。
+
+            #filepath = QFileDialog.getOpenFileNames(self, clickAddFileHint, '', acceptFiles)
+            dialog = QFileDialog(self, caption=clickAddFileHint, filter = acceptFiles);
+            err = dialog.exec_()
+            filepath = []
+            if err == QDialog.Accepted:
+                urls = dialog.selectedUrls()
+                filepath = []
+                for url in urls:
+                    if url.isLocalFile() or url.isEmpty():
+                        filepath.append(url.toLocalFile())
+                    else:
+                        filepath.append(url.toString())
+            if len(filepath) > 0:
+                for path in filepath:
                     fileInfo = FileInfo.FromFilePath(path)
                     self.fileDropped.emit(fileInfo)
         self.OnClickSignal.connect(clickToAddFile)

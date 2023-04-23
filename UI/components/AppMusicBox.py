@@ -5,7 +5,8 @@ from .AppLayoutBox import AppLayoutBox
 from pyqt5Custom import ImageBox
 from typing import Union, Literal
 from PySide2.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout
-from PySide2.QtMultimedia import QMediaPlayer
+#from PySide2.QtMultimedia import QMediaPlayer
+from Core.Media.EXPlayer import EXPlayer
 from PySide2.QtCore import QEvent, Qt
 from functools import partial
 from Core import appManager, AutoTranslateWord, musicPlayerManager
@@ -13,7 +14,7 @@ from Core import appManager, AutoTranslateWord, musicPlayerManager
 musicBoxHint = Union[QWidget, AppWidgetHintClass,'AppMusicBox']
 class AppMusicBox(AppWidget(QWidget)):
 
-    def __init__(self:musicBoxHint, mediaPlayer:QMediaPlayer, *args, height=150, **kwargs):
+    def __init__(self:musicBoxHint, mediaPlayer:EXPlayer, *args, height=150, **kwargs):
         super().__init__(*args, height=height, **kwargs)
         self.mediaPlayer = mediaPlayer
         self.hLyaout = QHBoxLayout(self)
@@ -91,7 +92,7 @@ class AppMusicBox(AppWidget(QWidget)):
         self.prevSongButton = self.buttonBar.addButton(None, appManager.getUIImagePath('prevSong.png'), None)
         self.prevSongButton.clicked.connect(self.mediaPlayer.goPreviousMusic) if hasattr(self.mediaPlayer, 'goPreviousMusic') else None
         self.playButton = self.buttonBar.addButton(None, appManager.getUIImagePath('stop.png'), None)
-        self.playButton.clicked.connect( lambda: musicPlayerManager.play() if self.mediaPlayer.state() != QMediaPlayer.PlayingState else musicPlayerManager.pause())
+        self.playButton.clicked.connect( lambda: musicPlayerManager.play() if not musicPlayerManager.isPlaying() else musicPlayerManager.pause())
         self.nextSongButton = self.buttonBar.addButton(None, appManager.getUIImagePath('nextSong.png'), None)
         self.nextSongButton.clicked.connect(self.mediaPlayer.goNextMusic) if hasattr(self.mediaPlayer, 'goNextMusic') else None
         self.smallMenuButton = self.buttonBar.addButton(None, appManager.getUIImagePath('3bar.png'), None)
@@ -101,12 +102,17 @@ class AppMusicBox(AppWidget(QWidget)):
         self.progressSlider = AppSlider(parent=self, direction='Horizontal', backgroundColor=self.furthurBackgroundColor, minimum=0, maximum=0)
         self.currentTimeText = AppTextLabel(text='00:00', fontSize=10)
         self.progressSlider.valueChanged.connect(lambda value: self.currentTimeText.SetText(f'{int(value// 60):02d}:{int(value % 60):02d}'))
+        ## 拉动进度条时把音频也跳到对应位置
+        self.progressSlider.sliderReleased.connect(lambda : self.mediaPlayer.setPosition(self.progressSlider.value() * 1000))
+        #self.progressSlider.sliderMoved.connect(lambda : self.mediaPlayer.setPosition(self.progressSlider.value() * 1000))
+        self.progressSlider.jumpPress.connect(lambda : self.mediaPlayer.setPosition(self.progressSlider.value() * 1000))
         self.progressBar = AppLayoutBox(direction='Horizontal',borderCornerRadius=0)
         self.progressBar.addWidget(self.currentTimeText, stretch=0)
         self.progressBar.addWidget(self.progressSlider, stretch=1)
         self.vLayout.addWidget(self.progressBar)
 
-        if hasattr(self.mediaPlayer, 'currentMusic') and hasattr(self.mediaPlayer, 'addOnMusicChanged'):
+        #if hasattr(self.mediaPlayer, 'currentMusic') and
+        if hasattr(self.mediaPlayer, 'addOnMusicChanged'):
             def onMusicChanged(music):
                 self.progressSlider.setMaximum(music.duration)
                 self.SetTitle(music.title or AutoTranslateWord('Unknown'))
@@ -126,8 +132,9 @@ class AppMusicBox(AppWidget(QWidget)):
             self.mediaPlayer.addOnPlayModeChanged(onPlayModeChanged)
         onPlayModeChanged(self.mediaPlayer.playMode)
 
-        def onPlayStateChanged(state:QMediaPlayer.State):
-            if state == QMediaPlayer.PlayingState:
+        def onPlayStateChanged(state:EXPlayer.State):
+            #if state == EXPlayer.State.PlayingState:
+            if self.mediaPlayer.isPlaying():
                 self.playButton.setIcon(appManager.getUIImagePath('play.png'))
             else:
                 self.playButton.setIcon(appManager.getUIImagePath('stop.png'))
