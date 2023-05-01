@@ -14,14 +14,13 @@ class GroupInfoPage(AppPage):
         groupInfoLayout.setContentsMargins(5,5,5,5)
         groupInfoLayout.setSpacing(5)
 
-        card1 = AppCardButton(title='NING Chenyu 1155177065', height=120, text="Computer Science - Year3",)
-        card2 = AppCardButton(title='YUE Haoyuan 1155157271', height=120, text="Computer Science - Year3",)
+        card1 = AppCardButton(title='NING Chenyu 1155177065', height=120, text="Computer Science - Year3",
+                              icon=appManager.getUIImagePath("ncy_icon.png"))
         card3 = AppCardButton(title='CHAN Tai Ming 1155159003', height=120, text="Computer Science - Year3",
                               icon=appManager.getUIImagePath("ctm_icon.png"))
         card4 = AppCardButton(title='DAI Ruyi 1155173812', height=120, text="Artificial Intelligence - Year2",
                               icon=appManager.getUIImagePath("dry_icon.png"))
         groupInfoLayout.addWidget(card1)
-        groupInfoLayout.addWidget(card2)
         groupInfoLayout.addWidget(card3)
         groupInfoLayout.addWidget(card4)
         self.addComponent(groupInfoLayout)
