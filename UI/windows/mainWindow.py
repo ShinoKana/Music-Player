@@ -69,6 +69,10 @@ class MainWindow(AppWindow):
         self.openAni_opacity.start()
         # endregion
 
+        def setMainWindow():
+            appManager.mainWindow = self
+        self.openAni_opacity.finished.connect(setMainWindow)
+
     def allowMultiplePageInstances(cls):
         return False
     def hideOrShowMainWindow(self):

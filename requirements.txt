@@ -11,7 +11,10 @@ scipy
 shiboken2
 urllib3
 darkdetect
-#sqlite3
 wave
 matplotlib
 soundfile
+python-socketio
+netifaces
+pystun3
+pythonp2p

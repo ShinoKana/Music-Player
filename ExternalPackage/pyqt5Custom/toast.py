@@ -85,9 +85,10 @@ class Toast(QWidget):
     def __repr__(self):
         return f"<pyqt5Custom.Toast()>"
     def adjustSize(self) -> None:
-        self.conwdt.adjustSize()
         self.close_btn.adjustSize()
         self.textLbl.adjustSize()
+        self.conwdt.adjustSize()
+        self.paintEvent(None)
         super().adjustSize()
         self.update()
 

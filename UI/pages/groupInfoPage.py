@@ -9,7 +9,7 @@ import Core
 class GroupInfoPage(AppPage):
     def __init__(self, appWindow, parent: Union[QFrame, QLayout] = None):
         super().__init__(appWindow=appWindow, parent=parent, titleText=AutoTranslateWord("groupInfo"))
-  
+
         groupInfoLayout = QVBoxLayout()
         groupInfoLayout.setContentsMargins(5,5,5,5)
         groupInfoLayout.setSpacing(5)
@@ -31,8 +31,12 @@ class GroupInfoPage(AppPage):
                                            url="https://github.com/ShinoKana/Music-Player",
                                            iconPath=appManager.getDefaultUIIconPath(Core.Default_UI_Icon.Link),
                                            text=AutoTranslateWord("click to open"),
-                                           content=AutoTranslateWord("Check out our github repo!")))
-
+                                           content=AutoTranslateWord("Check out our github repo!(Music Player App)")))
+        self.addComponent(AppHyperlinkCard(title=AutoTranslateWord("github repo"),
+                                           url="https://github.com/92MING/MusicPlayerServer",
+                                           iconPath=appManager.getDefaultUIIconPath(Core.Default_UI_Icon.Link),
+                                           text=AutoTranslateWord("click to open"),
+                                           content=AutoTranslateWord("Check out our github repo!(Music Player App Server)")))
     def onSwitchIn(self):
         pass
     def onSwitchOut(self):

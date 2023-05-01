@@ -330,8 +330,10 @@ class AppWindow(FramelessWindow):
             self.loadingToastBox.setText(text)
             self.loadingToastBox.rise()
             self.loadingToastBox.adjustSize()
+            self.loadingToastBox.repaint()
             self.__isloading = True
             self.__loadingText = text
+
     def stoploading(self):
         if self.__isloading:
             self.loadingToastBox.fall()

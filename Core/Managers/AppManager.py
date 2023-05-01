@@ -1,16 +1,14 @@
 # -*- coding:utf-8 -*-
-
-import os, re, json
-import sys
+import os, re, json, uuid, sys
 from enum import Enum
 from typing import Dict, List, Union
 from pathlib import Path
-
 from PySide2.QtGui import QColor
 from PySide2.QtCore import QObject
 from ExternalPackage.qfluentwidgets.common import (ConfigValidator, OptionsConfigItem, OptionsValidator, ColorConfigItem, BoolValidator,
                             ConfigItem, ConfigSerializer, ColorValidator, exceptionHandler, ColorSerializer,
                             RangeValidator, QConfig, qconfig)
+
 #path
 def _getPathBytes(path:Union[str, bytes, Path])->bytes:
     encode = sys.getdefaultencoding()
@@ -242,10 +240,15 @@ class RecordManager(AppRecord, Manager):
     lastSongList = RecordItem("music", "lastSongList", -1, NumberValidator())
     lastSongTime = RecordItem("music", "lastSongTime", 0, NumberValidator())
     unfoldingSongList = RecordItem("music", "unfoldingSongList", "-1", AppRecordValidator())
+    #user data
+    userID = RecordItem('user', 'userID', '', AppRecordValidator())
     def __init__(self):
         AppRecord.__init__(self, APP_RECORD_PATH)
         self._temperateRecord = {}
         self.load()
+        if self.userID.value is None or self.userID.value == '':
+            self.userID.value = str((uuid.uuid5(uuid.NAMESPACE_DNS, str(uuid.uuid1()) + str(os.urandom(16))))).replace('-', '')
+        print('user:', self.userID.value)
     def __del__(self):
         self.save()
     @exceptionHandler()
@@ -312,11 +315,44 @@ class Default_UI_Icon(Enum):
     BackgroundColor = "Background_color"
     FluorescentPen = "Fluorescent_pen"
 class AppManager(Manager):
+
     _config:ConfigManager = None
     _record:RecordManager = None
+    _mainWindow: 'AppWindow' = None
+
+    _toastsBeforeStart = []
+    _loadingMessagesBeforeStart = []
+
     def __init__(self):
         self._config = ConfigManager()
         self._record = RecordManager()
+
+    def toast(self, title: str = "", content: str = "", duration: float = 4.5, icon: Union[str, 'QIcon', 'QPixmap'] = None):
+        '''show a toast'''
+        if self.mainWindow is None:
+            self._toastsBeforeStart.append((title, content, duration, icon))
+            return
+        self.mainWindow.toast(title, content, duration, icon)
+    def goLoading(self, text=None, closable=True):
+        '''show loading page'''
+        if self.mainWindow is None:
+            self._loadingMessagesBeforeStart.append((text, closable))
+            return
+        self.mainWindow.goloading(text, closable)
+
+    @property
+    def mainWindow(self)->'AppWindow':
+        return self._mainWindow
+    @mainWindow.setter
+    def mainWindow(self, value: 'AppWindow'):
+        self._mainWindow = value
+        for title, content, duration, icon in self._toastsBeforeStart:
+            self.toast(title, content, duration, icon)
+        self._toastsBeforeStart.clear()
+        for text, closable in self._loadingMessagesBeforeStart:
+            self.goLoading(text, closable)
+        self._loadingMessagesBeforeStart.clear()
+
     @property
     def config(self)->ConfigManager:
         return self._config

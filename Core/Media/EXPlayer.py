@@ -101,6 +101,10 @@ class EXPlayer(QObject):
             if hasattr(audio, 'setMusic'):
                 audio.setMusic(self._playList.currentMusic)
             if audio.decision():
+                if isinstance(audio, WavPlayer):
+                    print('using wav player')
+                elif isinstance(audio, QMediaPlayer):
+                    print('using default player')
                 audio.setPosition(self.position)
                 audio.play()
                 self._lastPlayer = audio
