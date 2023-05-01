@@ -14,8 +14,7 @@ class PlayerPage(AppPage):
     def __init__(self, appWindow, parent: Union[QFrame, QLayout] = None):
         super().__init__(appWindow=appWindow, parent=parent, titleText=AutoTranslateWord("Play"))
         print("Initial")
-        #TODO: Because the color of the scroll box is different
-        #TODO: I deliberately set to white, which may lead to the dark mode display strange
+
         self.pageLayout = QHBoxLayout()
         self.setLayout(self.pageLayout)
         self.labels = []
@@ -32,6 +31,9 @@ class PlayerPage(AppPage):
         self.labels = []
         self.timeline = []
 
+        #使用硬编码确定文件位置, 目前文件必须放置在./UI/pages/lyric目录下,并且歌词格式固定, 
+        #文件名为"歌名.txt"和""歌名.png"才能寻找到现在播放的音乐对应的图片和歌词
+        #TODO:更改数据库格式, 支持文件上传到数据库并共享
         self.imagePath = os.path.join(os.path.dirname(os.path.abspath(__file__)), "lyric\\", self.musicNow + ".png")
         file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "lyric\\", self.musicNow + ".txt")
 
@@ -64,31 +66,21 @@ class PlayerPage(AppPage):
 
     def onSwitchIn(self):
         print("onSwitchIn")
-            #TODO:Here the file address is found based on the absolute path, and the file name is also fixed
-            #TODO:Need to get the name of the song and find the corresponding file
-        
         self.switchingIn = True
         if not hasattr(self, 'imageLayout'):
-            # Create the image layout if it doesn't exist
             self.imageLayout = QVBoxLayout()
             self.imageLabel = QLabel()
             self.imageLayout.addWidget(self.imageLabel)
             self.pageLayout.addLayout(self.imageLayout)
 
         if not hasattr(self, 'scrollBox'):
-            # Create the scroll box if it doesn't exist
             self.scrollBox = AppScrollBox(titleText="Lyrics")
-            #self.scrollBox.setStyleSheet("QLabel { padding: 5px; }")
             self.pageLayout.addWidget(self.scrollBox)
-            #self.scrollBox.viewport().setStyleSheet("background-color: #FFFFFF;")
-
-        
 
         self.update_lyrics_and_labels()
 
 
     def print_music_info(self, title, position):
-
         if self.musicNow != title:
                 print("newtitle: ", title)
                 print("oldtitle: ",self.musicNow)
@@ -97,7 +89,6 @@ class PlayerPage(AppPage):
 
         if self.switchingIn:
             for i in range(0, len(self.timeline)-1):
-                    
                 if self.timeline[0] <= position and self.timeline[i] < position < self.timeline[i+1]:
                     for label in self.labels:
                         label.setStyleSheet("")
