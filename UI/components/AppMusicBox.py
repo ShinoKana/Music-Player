@@ -14,7 +14,7 @@ from PySide2.QtCore import Signal ############################
 
 musicBoxHint = Union[QWidget, AppWidgetHintClass,'AppMusicBox']
 class AppMusicBox(AppWidget(QWidget)):
-    music_info_signal = Signal(str, int)################################
+    music_info_signal = Signal(str, int, str, str)################################
     def __init__(self:musicBoxHint, mediaPlayer:EXPlayer, *args, height=150, **kwargs):
         super().__init__(*args, height=height, **kwargs)
         self.mediaPlayer = mediaPlayer
@@ -147,7 +147,9 @@ class AppMusicBox(AppWidget(QWidget)):
             #########################################################################################
             if hasattr(self.mediaPlayer, 'currentMusic'):
                 title = self.mediaPlayer.currentMusic.title or AutoTranslateWord('Unknown')
-                self.music_info_signal.emit(title, sec)
+                cover_path = self.mediaPlayer.currentMusic.coverPath or AutoTranslateWord('Unknown')
+                lyric_path = self.mediaPlayer.currentMusic.lyricPath or AutoTranslateWord('Unknown')
+                self.music_info_signal.emit(title, sec, lyric_path, cover_path)
                 #####################################################################################
         self.mediaPlayer.positionChanged.connect(onPositionChanged)
 
