@@ -13,8 +13,6 @@ class PlayerPage(AppPage):
     
     def __init__(self, appWindow, parent: Union[QFrame, QLayout] = None):
         super().__init__(appWindow=appWindow, parent=parent, titleText=AutoTranslateWord("Play"))
-        #print("Initial")
-
         self.pageLayout = QHBoxLayout()
         self.setLayout(self.pageLayout)
         self.labels = []
@@ -37,8 +35,7 @@ class PlayerPage(AppPage):
         file_path = self.lyric_path
         #imagePath = os.path.join(os.path.dirname(os.path.abspath(__file__)), "lyric\\", self.musicNow + ".png")
         #file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "lyric\\", self.musicNow + ".txt")
-        
-
+ 
         pixmap = QPixmap(imagePath).scaled(500, 500)
         self.imageLabel.setPixmap(pixmap)
 
@@ -47,7 +44,6 @@ class PlayerPage(AppPage):
 
         with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
             lines = f.readlines()
-            #print(lines)
             self.lyrics = lines
             for line in lines:
                 label = QLabel(line.strip().replace("\n", ""))
@@ -71,7 +67,6 @@ class PlayerPage(AppPage):
         
 
     def onSwitchIn(self):
-        #print("onSwitchIn")
         self.switchingIn = True
         if not hasattr(self, 'imageLayout'):
             self.imageLayout = QVBoxLayout()
@@ -88,8 +83,6 @@ class PlayerPage(AppPage):
 
     def print_music_info(self, title, position, lyric_path, cover_path):
         if self.musicNow != title:
-                #print("newtitle: ", title)
-                #print("oldtitle: ",self.musicNow)
                 self.musicNow = title
                 self.lyric_path = lyric_path
                 self.cover_path = cover_path
@@ -117,6 +110,5 @@ class PlayerPage(AppPage):
 
             
     def onSwitchOut(self):
-        #print("onSwitchOut")
         self.switchingIn = False
         pass
