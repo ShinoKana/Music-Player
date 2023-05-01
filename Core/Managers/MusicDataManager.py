@@ -114,6 +114,11 @@ class Music(QMediaContent, FileInfo):
     # endregion
 
     #region methods
+    def hasCover(self)->bool:
+        return self._coverPath is not None
+    def hasLyric(self)->bool:
+        return self._lyricPath is not None
+
     def setCover(self, coverHash:str):
         self._coverPath = localDataManager.expectedPathByHash(coverHash)
         musicDataManager.musicTable.update(self.id, {'coverHash': coverHash})
@@ -339,22 +344,25 @@ class MusicDataManager(Manager):
         for callback in self._onMusicAdded:
             callback(music)
         return music
-    def saveCover(self, fileInfo:'FileInfo', music:Union[int, 'Music']=None):
-        if fileInfo.fileType != Core.FileType.IMG and fileInfo.fileType != Core.FileType.IMG:
-            return
+    def saveCover(self, fileInfo:'FileInfo', music:Union[int, 'Music']=None)->bool:
         if localDataManager.hasFile(fileInfo.fileHash):
-            return
+            print('already exist')
+            return False
         localDataManager.saveFile(fileInfo)
         if music:
             music = self.getMusic(music) if isinstance(music, int) else music
             music.setCover(fileInfo.fileHash)
-    def saveCover_byData(self, data, music:Union[int, 'Music']=None):
+        print(f'saved cover {fileInfo.fileName}({fileInfo.filePath}) to music {music.title}')
+        return True
+    def saveCover_byData(self, data, music:Union[int, 'Music']=None)->bool:
         hash = localDataManager.saveData(data)
         if hash is None:
-            return
+            return False
         if music:
             music = self.getMusic(music) if isinstance(music, int) else music
             music.setCover(hash)
+        print(f'saved cover to music {music.title}')
+        return True
     def saveLyric(self, fileInfo:'FileInfo', music:Union[int, 'Music']=None):
         hash = localDataManager.saveFile(fileInfo)
         if hash is None:
@@ -362,11 +370,12 @@ class MusicDataManager(Manager):
         if music:
             music = self.getMusic(music) if isinstance(music, int) else music
             music.setLyric(hash)
+        print(f'saved lyric {fileInfo.fileName}({fileInfo.filePath}) to music {music.title}')
     def deleteMusic(self, music:Union[int, 'Music']):
         _musicID = music if isinstance(music, int) else music.id
         _musicData = self.musicTable.get(_musicID)
-        self.deleteLyric(_musicID) #delete lyric first
-        self.deleteCover(_musicID) #delete cover first
+        self.deleteLyric(_musicID) if music.hasLyric() else None
+        self.deleteCover(_musicID) if music.hasCover() else None
         localDataManager.deleteFile(_musicData.get('musicHash'))
         from Core import musicPlayerManager, appManager
         if musicPlayerManager.currentMusic and musicPlayerManager.currentMusic.id == _musicID:
@@ -377,6 +386,7 @@ class MusicDataManager(Manager):
         _music = _allMusics.pop(_musicID)
         for callback in tuple(_music._onDeletedCallbacks):
             callback(_music)
+        print(f'deleted music {_music.title}')
         del _music
     def deleteLyric(self, music:Union[int, 'Music']):
         _musicID = music if isinstance(music, int) else music.id
@@ -388,6 +398,7 @@ class MusicDataManager(Manager):
             music._lyricPath = None
             for callback in music._onLyricChangedCallbacks:
                 callback(music)
+        print(f'deleted lyric of music {music.title}')
     def deleteCover(self, music:Union[int, 'Music']):
         _musicID = music if isinstance(music, int) else music.id
         _musicData = self.musicTable.get(_musicID)
@@ -398,5 +409,5 @@ class MusicDataManager(Manager):
             music._coverPath = None
             for callback in music._onCoverChangedCallbacks:
                 callback(music)
-
+        print(f'deleted cover of music {music.title}')
 musicDataManager = MusicDataManager()

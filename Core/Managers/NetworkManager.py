@@ -48,8 +48,8 @@ class NetworkManager(socketio.AsyncClient, Manager):
                 #appManager.toast(AutoTranslateWord('connect to server failed'))
                 return
 
-        appManager.goLoading(AutoTranslateWord('connecting to server...'))
-        threading.Thread(target=lambda: asyncio.run(connect_to_server())).start()
+        #appManager.goLoading(AutoTranslateWord('connecting to server...'))
+        #threading.Thread(target=lambda: asyncio.run(connect_to_server())).start()
 
     @property
     def sessionID(self):

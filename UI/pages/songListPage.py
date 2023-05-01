@@ -99,7 +99,7 @@ class SongListPage(AppPage):
         # endregion
 
         setattr(itemBox, '_music', music) #for convenience
-        itemBox.addOnLeftClickCallback(partial(self.onclickMusicItem, music.id, lst.id, len(listBox.components)))
+        itemBox.addOnLeftClickCallback(partial(self._onclickMusicItem, music.id, lst.id, len(listBox.components)))
         def musicDeletedOrRemovedCallback(_music):
             if _music == itemBox._music:
                 self.removeMusicItemFromListBox(_music, listBox)
@@ -112,6 +112,7 @@ class SongListPage(AppPage):
         if adjustListBoxSizeAtFinal:
             listBox.adjustSize()
         return itemBox
+
     def removeMusicItemFromListBox(self, music, listBox: AppFoldBox):
         for box in listBox.components:
             if box._music.id == music.id:
@@ -120,7 +121,8 @@ class SongListPage(AppPage):
                 lst.removeOnMusicRemovedCallback(box._musicDeletedOrRemovedCallback)
                 music.removeOnDeletedCallback(box._musicDeletedOrRemovedCallback)
                 break
-    def onclickMusicItem(self, musicID: int, lstID: int, itemBoxIndex):
+
+    def _onclickMusicItem(self, musicID: int, lstID: int, itemBoxIndex):
         lst = musicDataManager.getMusicList(lstID)
         itemBox = self._allSongListBox[lst._id].getComponentByIndex(itemBoxIndex)
         if musicPlayerManager.currentMusic is not None:

@@ -6,6 +6,7 @@ from Core.DataType import FileInfo
 from .Manager import *
 
 class LocalDataManager(Manager):
+
     def __init__(self):
         if not os.path.exists(appManager.DATABASE_PATH):
             #create database.db file if not exists
@@ -13,7 +14,7 @@ class LocalDataManager(Manager):
                 f.write("")
                 f.close()
         self._database = Database(appManager.DATABASE_PATH)
-        self._database.setForeignKeyRestrict(True)
+        self._database.setForeignKeyRestrict(False)
         self._database.create_table(name='file',
                                     columns={'filePath': str, 'filename': str, 'fileHash': str},
                                     pk=['fileHash'],
@@ -21,6 +22,7 @@ class LocalDataManager(Manager):
                                     if_not_exists=True)
         self._fileTable = self._database['file']
         self.fileTable.create_index(['filename','fileHash'], if_not_exists=True)
+        
     @property
     def database(self)->Database:
         return self._database

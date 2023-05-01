@@ -1,7 +1,7 @@
 from Core.DataType import FileType, FileInfo
 from .AppPage import AppPage
 from typing import Union, Sequence, Dict
-from PySide2.QtWidgets import QFrame, QLayout, QWidget
+from PySide2.QtWidgets import QFrame, QLayout, QWidget, QDialog, QFileDialog
 from components import AppUploadFileArea_WithFileBox, AppSearchBar_WithDropDown, AppScrollBox, AppTextLabel, AppLayoutBox
 from Core import AutoTranslateWord, AutoTranslateWordList, musicDataManager, localDataManager, appManager
 
@@ -56,6 +56,9 @@ class SongManagePage(AppPage):
                 self.addMusicBoxToSongListBox(music)
 
     def addMusicBoxToSongListBox(self, music, order:int=None):
+        #添加一个音乐条目到列表中
+
+        #音乐条目主体
         itemBox = AppLayoutBox(height=30, align='left', parent=self.songListBox, fontBold=True)
         _name = music._title
         if len(_name) > 30:
@@ -76,6 +79,72 @@ class SongManagePage(AppPage):
         itemBox.addText(artist, stretch=1)
         itemBox.addText(album, stretch=1)
         itemBox.addText(AutoTranslateWord('[duration]: ') + music.duration_formatted.ljust(15), stretch=1)
+
+        if music.hasCover():
+            def deleteCover(_music):
+                _music.deleteCover()
+                self.appWindow.toast(music.title + ":" +AutoTranslateWord('cover deleted'))
+            itemBox.addButton(AutoTranslateWord('delete cover'), appManager.getUIImagePath('delete.png'),
+                                command=lambda : deleteCover(music))
+        else:
+        #添加“上传封面”按钮
+            def uploadCover(_music):
+                dialog = QFileDialog(self, caption=AutoTranslateWord('select cover image'), filter=AutoTranslateWord('image files') + ' (*.jpg *.png *.bmp)')
+                dialog.setFileMode(QFileDialog.ExistingFile)
+                err = dialog.exec_()
+                if err == QDialog.Rejected:
+                    print('rejected file dialog')
+                    return
+                if err == QDialog.Accepted:
+                    urls = dialog.selectedUrls()
+                    filepath = []
+                    for url in urls:
+                        if url.isLocalFile() or url.isEmpty():
+                            filepath.append(url.toLocalFile())
+                        else:
+                            filepath.append(url.toString())
+                        break
+                    if len(filepath) == 0:
+                        return
+                    fileInfo = FileInfo.FromFilePath(filepath[0])
+                    if musicDataManager.saveCover(fileInfo, _music):
+                        self.appWindow.toast(music.title + ":" +AutoTranslateWord('cover uploaded'))
+            itemBox.addButton(AutoTranslateWord('upload cover'), appManager.getUIImagePath('upload.png'),
+                              command=lambda : uploadCover(music))
+
+        if music.hasLyric():
+            def deleteLyric(_music):
+                _music.deleteLyric()
+                self.appWindow.toast(music.title + ":" + AutoTranslateWord('lyric deleted'))
+            itemBox.addButton(AutoTranslateWord('delete lyric'), appManager.getUIImagePath('delete.png'),
+                                command=lambda : deleteLyric(music))
+        else:
+            #添加“上传歌词”按钮
+            def uploadLyric(_music):
+                dialog = QFileDialog(self, caption=AutoTranslateWord('select lyric file'), filter=AutoTranslateWord('lyric files') + ' (*.txt *.lrc)')
+                dialog.setFileMode(QFileDialog.ExistingFile)
+                err = dialog.exec_()
+                if err == QDialog.Rejected:
+                    print('rejected file dialog')
+                    return
+                if err == QDialog.Accepted:
+                    urls = dialog.selectedUrls()
+                    filepath = []
+                    for url in urls:
+                        if url.isLocalFile() or url.isEmpty():
+                            filepath.append(url.toLocalFile())
+                        else:
+                            filepath.append(url.toString())
+                        break
+                    if len(filepath) == 0:
+                        return
+                    fileInfo = FileInfo.FromFilePath(filepath[0])
+                    if musicDataManager.saveLyric(fileInfo, _music):
+                        self.appWindow.toast(music.title + ":" + AutoTranslateWord('lyric uploaded'))
+            itemBox.addButton(AutoTranslateWord('upload lyric'), appManager.getUIImagePath('upload.png'),
+                              command=lambda : uploadLyric(music))
+
+        #添加删除按钮
         def deleteMusic(_music):
             musicDataManager.deleteMusic(_music)
             self.appWindow.toast(AutoTranslateWord(f"[Music]: {_music._title} [deleted successfully]"))

@@ -145,8 +145,11 @@ class AppUploadFileArea(AppWidget(DragDropFile)):
             ## 如果用静态方法直接建立QFileDialog会导致其它线程无法得到正常的调度。所以这里改成了这个，或者使用Pyside6也可以解决。
 
             #filepath = QFileDialog.getOpenFileNames(self, clickAddFileHint, '', acceptFiles)
-            dialog = QFileDialog(self, caption=clickAddFileHint, filter = acceptFiles);
+            dialog = QFileDialog(self, caption=clickAddFileHint, filter = acceptFiles)
             err = dialog.exec_()
+            if err == QDialog.Rejected:
+                print('rejected file dialog')
+                return
             filepath = []
             if err == QDialog.Accepted:
                 urls = dialog.selectedUrls()
