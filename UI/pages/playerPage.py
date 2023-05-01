@@ -13,7 +13,7 @@ class PlayerPage(AppPage):
     
     def __init__(self, appWindow, parent: Union[QFrame, QLayout] = None):
         super().__init__(appWindow=appWindow, parent=parent, titleText=AutoTranslateWord("Play"))
-        print("Initial")
+        #print("Initial")
 
         self.pageLayout = QHBoxLayout()
         self.setLayout(self.pageLayout)
@@ -65,7 +65,7 @@ class PlayerPage(AppPage):
         
 
     def onSwitchIn(self):
-        print("onSwitchIn")
+        #print("onSwitchIn")
         self.switchingIn = True
         if not hasattr(self, 'imageLayout'):
             self.imageLayout = QVBoxLayout()
@@ -82,12 +82,20 @@ class PlayerPage(AppPage):
 
     def print_music_info(self, title, position):
         if self.musicNow != title:
-                print("newtitle: ", title)
-                print("oldtitle: ",self.musicNow)
+                #print("newtitle: ", title)
+                #print("oldtitle: ",self.musicNow)
                 self.musicNow = title
                 self.update_lyrics_and_labels()
 
         if self.switchingIn:
+            if self.timeline[len(self.timeline)-1] < position:
+                for label in self.labels:
+                    label.setStyleSheet("")
+                    if self.isDark:
+                        label.setStyleSheet("color: white;")
+                    label.setFixedHeight(30)
+                self.labels[len(self.timeline)-1].setStyleSheet("font-weight: bold; color: red;")
+
             for i in range(0, len(self.timeline)-1):
                 if self.timeline[0] <= position and self.timeline[i] < position < self.timeline[i+1]:
                     for label in self.labels:
@@ -99,6 +107,6 @@ class PlayerPage(AppPage):
 
             
     def onSwitchOut(self):
-        print("onSwitchOut")
+        #print("onSwitchOut")
         self.switchingIn = False
         pass
