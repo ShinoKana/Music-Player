@@ -21,8 +21,45 @@ class PlayerPage(AppPage):
         self.labels = []
         self.switchingIn = False
         self.isDark = appManager.config.isDarkTheme()
+        self.musicNow = ""
+        app_music_box = self.appWindow.musicBox
+        app_music_box.music_info_signal.connect(self.print_music_info)
 
-        
+
+    def update_lyrics_and_labels(self):
+        self.scrollBox.removeAllComponents()
+        self.lyrics = []
+        self.labels = []
+        self.timeline = []
+
+        self.imagePath = os.path.join(os.path.dirname(os.path.abspath(__file__)), "lyric\\", self.musicNow + ".png")
+        file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "lyric\\", self.musicNow + ".txt")
+
+        pixmap = QPixmap(self.imagePath).scaled(500, 500)
+        self.imageLabel.setPixmap(pixmap)
+
+        with open(file_path, "r", encoding="utf-8") as f:
+            lines = f.readlines()
+            self.lyrics = lines
+            for line in lines:
+                label = QLabel(line.strip().replace("\n", ""))
+                label.setFixedHeight(30)
+                if self.isDark:
+                    label.setStyleSheet("color: white;")
+                self.labels.append(label)
+                self.scrollBox.addComponent(label)
+
+            for i in range(0, len(lines)):
+                time = lines[i].split(']')[0][1:]
+                time = int(time.split(':')[0]) * 60 + int(time.split(':')[1].split('.')[0])
+                self.timeline.append(time)
+
+            for label in self.labels:
+                label.setStyleSheet("")
+                if self.isDark:
+                    label.setStyleSheet("color: white;")
+                label.setFixedHeight(30)
+                self.labels[0].setStyleSheet("font-weight: bold; color: red;")
         
 
     def onSwitchIn(self):
@@ -45,56 +82,23 @@ class PlayerPage(AppPage):
             self.pageLayout.addWidget(self.scrollBox)
             #self.scrollBox.viewport().setStyleSheet("background-color: #FFFFFF;")
 
-        app_music_box = self.appWindow.musicBox
-        app_music_box.music_info_signal.connect(self.print_music_info)
-
-        self.scrollBox.removeAllComponents()
-        self.lyrics = []
-        self.labels = []
-        self.timeline = []
-
-        self.imagePath = os.path.join(os.path.dirname(os.path.abspath(__file__)), "image1.png")
-        file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "text_file.txt")
         
-        pixmap = QPixmap(self.imagePath).scaled(500,500)
-        self.imageLabel.setPixmap(pixmap)
-        self.setLayout(self.pageLayout)
 
-        #Read the file, I put it in the same folder as playerPage
-        #Lyrics(Japanese) with timeline is in 'text_file.txt' 
-        with open(file_path, "r", encoding="utf-8") as f:
-            lines = f.readlines()
-            self.lyrics = lines
-            for line in lines:
-                label = QLabel(line.strip().replace("\n",""))
-                label.setFixedHeight(30)
-                if self.isDark:
-                    label.setStyleSheet("color: white;")
-                self.labels.append(label)
-                self.scrollBox.addComponent(label)
-
-            #The following codes calculates the time interval between each two lines of text, 
-            # i.e. the time each line of text should be displayed
-            #The results are stored in the list "delay"
-
-            for i in range(0,len(lines)):
-                time = lines[i].split(']')[0][1:]
-                time = int(time.split(':')[0])*60 + int(time.split(':')[1].split('.')[0])
-                self.timeline.append(time)
+        self.update_lyrics_and_labels()
 
 
-    # Add this method to the PlayerPage class####################################
     def print_music_info(self, title, position):
+
+        if self.musicNow != title:
+                print("newtitle: ", title)
+                print("oldtitle: ",self.musicNow)
+                self.musicNow = title
+                self.update_lyrics_and_labels()
+
         if self.switchingIn:
             for i in range(0, len(self.timeline)-1):
-                if self.timeline[0] > position:
-                    for label in self.labels:
-                        label.setStyleSheet("")
-                        if self.isDark:
-                            label.setStyleSheet("color: white;")
-                        label.setFixedHeight(30)
-                    self.labels[0].setStyleSheet("font-weight: bold; color: red;")
-                elif self.timeline[i] < position < self.timeline[i+1]:
+                    
+                if self.timeline[0] <= position and self.timeline[i] < position < self.timeline[i+1]:
                     for label in self.labels:
                         label.setStyleSheet("")
                         if self.isDark:
