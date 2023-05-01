@@ -21,6 +21,8 @@ class PlayerPage(AppPage):
         self.switchingIn = False
         self.isDark = appManager.config.isDarkTheme()
         self.musicNow = ""
+        self.lyric_path = "" 
+        self.cover_path = ""
         app_music_box = self.appWindow.musicBox
         app_music_box.music_info_signal.connect(self.print_music_info)
 
@@ -31,17 +33,21 @@ class PlayerPage(AppPage):
         self.labels = []
         self.timeline = []
 
-        #使用硬编码确定文件位置, 目前文件必须放置在./UI/pages/lyric目录下,并且歌词格式固定, 
-        #文件名为"歌名.txt"和""歌名.png"才能寻找到现在播放的音乐对应的图片和歌词
-        #TODO:更改数据库格式, 支持文件上传到数据库并共享
-        self.imagePath = os.path.join(os.path.dirname(os.path.abspath(__file__)), "lyric\\", self.musicNow + ".png")
-        file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "lyric\\", self.musicNow + ".txt")
+        imagePath = self.cover_path
+        file_path = self.lyric_path
+        #imagePath = os.path.join(os.path.dirname(os.path.abspath(__file__)), "lyric\\", self.musicNow + ".png")
+        #file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "lyric\\", self.musicNow + ".txt")
+        
 
-        pixmap = QPixmap(self.imagePath).scaled(500, 500)
+        pixmap = QPixmap(imagePath).scaled(500, 500)
         self.imageLabel.setPixmap(pixmap)
 
-        with open(file_path, "r", encoding="utf-8") as f:
+        print("file_path: ", file_path)
+        print("imagePath: ", imagePath)
+
+        with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
             lines = f.readlines()
+            #print(lines)
             self.lyrics = lines
             for line in lines:
                 label = QLabel(line.strip().replace("\n", ""))
@@ -80,11 +86,15 @@ class PlayerPage(AppPage):
         self.update_lyrics_and_labels()
 
 
-    def print_music_info(self, title, position):
+    def print_music_info(self, title, position, lyric_path, cover_path):
         if self.musicNow != title:
                 #print("newtitle: ", title)
                 #print("oldtitle: ",self.musicNow)
                 self.musicNow = title
+                self.lyric_path = lyric_path
+                self.cover_path = cover_path
+                print("lyric_path: ",lyric_path)
+                print("cover_path: ",cover_path)
                 self.update_lyrics_and_labels()
 
         if self.switchingIn:
