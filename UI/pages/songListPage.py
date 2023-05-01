@@ -139,6 +139,7 @@ class SongListPage(AppPage):
             itemBox.SetBackgroundColor(
                 QColor('blue').lighter() if appManager.config.isDarkTheme() else QColor('blue').darker())
         lst.setCurrentIndex(lst._musicIDs.index(musicID))
+        musicPlayerManager.stop()
         musicPlayerManager.setPosition(0)
         musicPlayerManager.play()
 
