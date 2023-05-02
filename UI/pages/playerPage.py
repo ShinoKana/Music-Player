@@ -19,12 +19,10 @@ class PlayerPage(AppPage):
         self.addComponent(self.pageLayoutWidget)
         self.labels = []
         self.switchingIn = False
-        self.isDark = appManager.config.isDarkTheme()
         self.musicNow = ""
         self.lyric_path = "" 
         self.cover_path = ""
-        app_music_box = self.appWindow.musicBox
-        app_music_box.music_info_signal.connect(self.print_music_info)
+        self.appWindow.musicBox.music_info_signal.connect(self.print_music_info)
 
         self.imageLayout = QVBoxLayout()
         self.image_view = QGraphicsView()
@@ -32,7 +30,7 @@ class PlayerPage(AppPage):
         self.pageLayout.addLayout(self.imageLayout)
         self.update_image("")  # initialize transparent background
 
-        self.scrollBox = AppScrollBox(titleText="Lyrics")
+        self.scrollBox = AppScrollBox(titleText=AutoTranslateWord("Lyrics"))
         self.pageLayout.addWidget(self.scrollBox)
 
         self.user_scrolling = False
@@ -76,6 +74,7 @@ class PlayerPage(AppPage):
         self.image_view.rotate(1)
 
     def pause_rotation(self):
+        print('pause rotation')
         self.rotation_timer.stop()
 
     def update_lyrics_and_labels(self):
@@ -101,8 +100,7 @@ class PlayerPage(AppPage):
             label = QLabel(lyrics_line.strip().replace("\n", ""))
             label.setFixedHeight(30)
             label.setAlignment(Qt.AlignCenter)
-            if self.isDark:
-                label.setStyleSheet("color: white;")
+            label.setStyleSheet(f"color: {'white' if appManager.config.isDarkTheme() else 'black'};")
             self.labels.append(label)
             self.scrollBox.addComponent(label)
 
@@ -114,8 +112,6 @@ class PlayerPage(AppPage):
         else:
             pixmap = QPixmap(500, 500)
             pixmap.fill(Qt.transparent)
-
-        item = QGraphicsPixmapItem(pixmap)
 
         pixmap = QPixmap(image_path).scaled(500, 500, Qt.KeepAspectRatio, Qt.SmoothTransformation)
         item = QGraphicsPixmapItem(pixmap)
@@ -164,7 +160,6 @@ class PlayerPage(AppPage):
                 self.rotation_timer.start(40)
 
         if position == 0:  # Pause
-            self.rotation_timer.stop()
             self.pause_rotation()
         elif position == -1:  # Stopped
             self.rotation_timer.stop()
@@ -180,12 +175,10 @@ class PlayerPage(AppPage):
                     break
 
             for i, label in enumerate(self.labels):
-                label.setStyleSheet("")
-                if self.isDark:
-                    label.setStyleSheet("color: white;")
-                    label.setFixedHeight(30)
-                    if i == current_lyrics_index:
-                        label.setStyleSheet("font-weight: bold; color: #D8B4FF;")
+                label.setStyleSheet(f"color: {'white' if appManager.config.isDarkTheme() else 'black'};")
+                label.setFixedHeight(30)
+                if i == current_lyrics_index:
+                    label.setStyleSheet("font-weight: bold; color: #D8B4FF;")
 
                 if current_lyrics_index != self.last_lyrics_index:
                     self.last_lyrics_index = current_lyrics_index
@@ -196,6 +189,6 @@ class PlayerPage(AppPage):
                     else:
                         self.user_scrolling = False
 
-def onSwitchOut(self):
-    self.switchingIn = False
-    pass
+    def onSwitchOut(self):
+        self.switchingIn = False
+        pass

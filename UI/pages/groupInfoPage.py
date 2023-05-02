@@ -26,12 +26,12 @@ class GroupInfoPage(AppPage):
         self.addComponent(groupInfoLayout)
 
         self.addSpace(20)
-        self.addComponent(AppHyperlinkCard(title=AutoTranslateWord("github repo"),
+        self.addComponent(AppHyperlinkCard(title=AutoTranslateWord("Client code repo"),
                                            url="https://github.com/ShinoKana/Music-Player",
                                            iconPath=appManager.getDefaultUIIconPath(Core.Default_UI_Icon.Link),
                                            text=AutoTranslateWord("click to open"),
                                            content=AutoTranslateWord("Check out our github repo!(Music Player App)")))
-        self.addComponent(AppHyperlinkCard(title=AutoTranslateWord("github repo"),
+        self.addComponent(AppHyperlinkCard(title=AutoTranslateWord("Server code repo"),
                                            url="https://github.com/92MING/MusicPlayerServer",
                                            iconPath=appManager.getDefaultUIIconPath(Core.Default_UI_Icon.Link),
                                            text=AutoTranslateWord("click to open"),

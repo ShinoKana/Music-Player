@@ -7,19 +7,22 @@ import types
 
 # 对MusicPlayer所需要的接口进行了一些封装，里面的调用哪个播放器由播放器初始化顺序以及他们的decision决定
 class EXPlayer(QObject):
+
     class State(Enum):
-        StoppedState = 0x00
-        PlayingState = 0x01
-        PausedState = 0x02
+        StoppedState = 0
+        PlayingState = 1
+        PausedState = 2
 
     positionChanged = Signal(int)
     currentMediaChanged = Signal(Music)
     stateChanged = Signal(State)
+
     _audios = []
     _playList = None
     _lastPlayer = None
     _position = 0
     _userPlaying = None
+
     def __init__(self, playList: MusicList, position: int):
         super().__init__()
         self.wavPlayer = WavPlayer()
@@ -38,6 +41,7 @@ class EXPlayer(QObject):
         self.defaultPlayer.isPlaying = types.MethodType(lambda self : self.state() == QMediaPlayer.State.PlayingState, self.defaultPlayer)
         self.defaultPlayer.decision = types.MethodType(lambda self : True, self.defaultPlayer)
         # defaultPlayer Wrapper end
+
         def wavPlayerStateWrapper(state: WavPlayer.State):
             if state == WavPlayer.State.PlayingState:
                 self.stateChanged.emit(EXPlayer.State.PlayingState)

@@ -1,7 +1,8 @@
-import json
+import json, GlobalValue
 from Core import appManager, musicDataManager, MusicList, SingleEnum, AutoTranslateWord
 import socketio, socket, requests, netifaces, stun, asyncio, pythonp2p
 from PySide2.QtCore import QRunnable, Signal, QObject, QThreadPool
+from PySide2.QtWidgets import QApplication
 from typing import Optional, Callable, Iterable, Union, Literal, List, Dict, Tuple
 from .Manager import *
 
@@ -17,11 +18,18 @@ class NATtype(SingleEnum):
     SymmetricNAT = 7
 class NetworkManager(socketio.AsyncClient, Manager):
 
-    _node: pythonp2p.Node = None
     _threadPool = None
+
+    _nodeProcess = None
+    _nodeProcessQueue = None
+    _nodePort = None
 
     def __init__(self):
         super().__init__()
+        self._nodePort = GlobalValue.GetGlobalValue('NODE_PORT')
+        self._nodeProcess = GlobalValue.GetGlobalValue('NODE_PROCESS')
+        self._nodeProcessQueue = GlobalValue.GetGlobalValue('NODE_QUEUE')
+        print('nodePort:', self._nodePort)
 
         #register events
         self.on('direct_connect', self.direct_connect)
@@ -49,15 +57,13 @@ class NetworkManager(socketio.AsyncClient, Manager):
                     'natType:',natType
                   )
             id = appManager.record.userID.value
-            self._node = pythonp2p.Node()
             try:
                 await self.connect(
                     url = _SERVER_URL,
                     headers = {'id': id, 'ip': globalIP, 'localIP': localIP,
-                            'port': str(self.node.port), 'submask': submask, 'natType': str(natType.value)},
+                            'port': str(self.nodePort), 'submask': submask, 'natType': str(natType.value)},
                     wait_timeout = 5
                 )
-                self.node.start()
                 print('connect to server success')
                 return True
             except Exception as e:
@@ -70,7 +76,7 @@ class NetworkManager(socketio.AsyncClient, Manager):
                 appManager.toast(AutoTranslateWord('connect to server success'))
             else:
                 appManager.toast(AutoTranslateWord('connect to server failed'))
-        self.create_async_thread(func = connect_to_server, returnCallbacks = onConnectionDone)
+        self.create_async_thread(func=connect_to_server, returnCallbacks=onConnectionDone)
 
     #song related
     def onUploadSong(self, newMusic:'Music'):
@@ -96,12 +102,16 @@ class NetworkManager(socketio.AsyncClient, Manager):
         return ret
 
     #node related
+    def orderNode(self, funcName, *args, **kwargs):
+        if self._nodeProcessQueue is None or self._nodeProcess is None:
+            return
+        self._nodeProcessQueue.put((funcName, args, kwargs))
     def try_connect_to(self, userID:str):
         self.emit('help_connect_to', {'targetID': userID})
     def direct_connect(self, data):
         ip = data['ip']
         port = data['port']
-        return self.node.connect_to(ip, port)
+        return self.orderNode('connect_to', ip, port)
     def udpHolePunch_repeat(self, data):
         pass
     def udpHolePunch_once(self, data):
@@ -115,13 +125,8 @@ class NetworkManager(socketio.AsyncClient, Manager):
     def sessionID(self):
         return self.get_sid()
     @property
-    def node(self):
-        return self._node
-    @property
-    def port(self):
-        if self._node is None:
-            return None
-        return self._node.port
+    def nodePort(self):
+        return self._nodePort
 
     async def getLocalIP(self):
         # 获取本地IP地址
@@ -230,6 +235,8 @@ class NetworkManager(socketio.AsyncClient, Manager):
                             self.signals.error.connect(callback)
                     else:
                         self.signals.error.connect(errorCallbacks)
+            def __del__(self):
+                print('worker is deleted')
             def run(self):
                 try:
                     if args is None and kwargs is None:
