@@ -339,6 +339,11 @@ class AppManager(Manager):
             self._loadingMessagesBeforeStart.append((text, closable))
             return
         self.mainWindow.goloading(text, closable)
+    def stopLoading(self):
+        '''stop loading page'''
+        if self.mainWindow is None:
+            return
+        self.mainWindow.stoploading()
 
     @property
     def mainWindow(self)->'AppWindow':

@@ -1,5 +1,7 @@
 from Core import appManager, musicDataManager, MusicList, SingleEnum, AutoTranslateWord
-import socketio, socket, requests, netifaces, stun, asyncio, pythonp2p, threading
+import socketio, socket, requests, netifaces, stun, asyncio, pythonp2p
+from PySide2.QtCore import QRunnable, Signal, QObject, QThreadPool
+from typing import Optional, Callable, Iterable, Union
 from .Manager import *
 
 _SERVER_URL = 'http://localhost:9192'
@@ -15,9 +17,11 @@ class NATtype(SingleEnum):
 class NetworkManager(socketio.AsyncClient, Manager):
 
     _node: pythonp2p.Node = None
+    _threadPool = None
 
     def __init__(self):
         super().__init__()
+        self._threadPool = QThreadPool()
         async def connect_to_server():
             print('connecting to server...')
             print('getting network info...')
@@ -42,14 +46,20 @@ class NetworkManager(socketio.AsyncClient, Manager):
                 )
                 self.node.start()
                 print('connect to server success')
-                #appManager.toast(AutoTranslateWord('connect to server success'))
+                return True
             except Exception as e:
                 print('connect to server failed, error:', e)
-                #appManager.toast(AutoTranslateWord('connect to server failed'))
-                return
+                return False
 
-        #appManager.goLoading(AutoTranslateWord('connecting to server...'))
-        #threading.Thread(target=lambda: asyncio.run(connect_to_server())).start()
+        appManager.goLoading(AutoTranslateWord('connecting to server...'))
+        def onConnectionDone(result):
+            appManager.stopLoading()
+            if result:
+                appManager.toast(AutoTranslateWord('connect to server success'))
+            else:
+                appManager.toast(AutoTranslateWord('connect to server failed'))
+        self.create_async_thread(func = connect_to_server,
+                                 returnCallbacks = onConnectionDone)
 
     @property
     def sessionID(self):
@@ -67,7 +77,6 @@ class NetworkManager(socketio.AsyncClient, Manager):
         # 获取本地IP地址
         hostname = socket.gethostname()
         return socket.gethostbyname(hostname)
-
     async def get_globalIP_and_NATtype(self) -> (str, NATtype):
         # 获取NAT类型
         natType, ip, _ = stun.get_ip_info()
@@ -88,7 +97,6 @@ class NetworkManager(socketio.AsyncClient, Manager):
         else:
             natType = NATtype.Unknown
         return ip, natType
-
     async def getSubMask(self):
         ip_address = await self.getLocalIP()
         # 遍历所有网卡获取子网掩码
@@ -99,5 +107,79 @@ class NetworkManager(socketio.AsyncClient, Manager):
                     if addr['addr'] == ip_address:
                         return addr['netmask']
         return None
+
+    def create_thread(self,
+                      func:Callable[[], object],
+                      returnCallbacks:Optional[Union[Iterable[Callable[[object], None]],Callable[[object], None]]]=None,
+                      errorCallbacks:Optional[Union[Iterable[Callable[[Exception], None]],Callable[[Exception], None]]]=None,
+                      start:bool=True):
+        class WorkerSignals(QObject):
+            finished = Signal(object)
+            error = Signal(Exception)
+
+        class Worker(QRunnable):
+            def __init__(self):
+                super().__init__()
+                self.signals = WorkerSignals()
+                if returnCallbacks is not None:
+                    if isinstance(returnCallbacks, Iterable):
+                        for callback in returnCallbacks:
+                            self.signals.finished.connect(callback)
+                    else:
+                        self.signals.finished.connect(returnCallbacks)
+                if errorCallbacks is not None:
+                    if isinstance(errorCallbacks, Iterable):
+                        for callback in errorCallbacks:
+                            self.signals.error.connect(callback)
+                    else:
+                        self.signals.error.connect(errorCallbacks)
+            def run(self):
+                try:
+                    result = func()
+                    self.signals.finished.emit(result)
+                except Exception as e:
+                    self.signals.error.emit(e)
+        if start:
+            worker = Worker()
+            self._threadPool.start(worker)
+            return worker
+        else:
+            return Worker()
+    def create_async_thread(self,
+                            func:Callable[[], object],
+                            returnCallbacks:Optional[Union[Iterable[Callable[[object], None]],Callable[[object], None]]]=None,
+                            errorCallbacks:Optional[Union[Iterable[Callable[[Exception], None]],Callable[[Exception], None]]]=None,
+                            start:bool=True):
+        class WorkerSignals(QObject):
+            finished = Signal(object)
+            error = Signal(Exception)
+        class Worker(QRunnable):
+            def __init__(self):
+                super().__init__()
+                self.signals = WorkerSignals()
+                if returnCallbacks is not None:
+                    if isinstance(returnCallbacks, Iterable):
+                        for callback in returnCallbacks:
+                            self.signals.finished.connect(callback)
+                    else:
+                        self.signals.finished.connect(returnCallbacks)
+                if errorCallbacks is not None:
+                    if isinstance(errorCallbacks, Iterable):
+                        for callback in errorCallbacks:
+                            self.signals.error.connect(callback)
+                    else:
+                        self.signals.error.connect(errorCallbacks)
+            def run(self):
+                try:
+                    result = asyncio.run(func())
+                    self.signals.finished.emit(result)
+                except Exception as e:
+                    self.signals.error.emit(e)
+        if start:
+            worker = Worker()
+            self._threadPool.start(worker)
+            return worker
+        else:
+            return Worker()
 
 networkManager = NetworkManager()
