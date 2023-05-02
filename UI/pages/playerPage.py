@@ -42,27 +42,30 @@ class PlayerPage(AppPage):
 
 
     def parse_lrc(self, file_path: str):
-        lyrics_data = []
-        with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
-            lines = f.readlines()
-            for line in lines:
-                if line.startswith('['):
-                    time_parts = line.split(']')
-                    timestamp_str = time_parts[0][1:]
-                    lyrics_line = time_parts[1].strip()
-                    if ':' in timestamp_str:
-                        time_parts = timestamp_str.split(':')
-                        if len(time_parts) == 2:
-                            minutes, seconds = time_parts
-                        else:
-                            continue
-                        try:
-                            timestamp = int(minutes) * 60 + float(seconds)
-                            lyrics_data.append((timestamp, lyrics_line))
-                        except ValueError:
-                            continue
-        return lyrics_data
-    
+        try:
+            lyrics_data = []
+            with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
+                lines = f.readlines()
+                for line in lines:
+                    if line.startswith('['):
+                        time_parts = line.split(']')
+                        timestamp_str = time_parts[0][1:]
+                        lyrics_line = time_parts[1].strip()
+                        if ':' in timestamp_str:
+                            time_parts = timestamp_str.split(':')
+                            if len(time_parts) == 2:
+                                minutes, seconds = time_parts
+                            else:
+                                continue
+                            try:
+                                timestamp = int(minutes) * 60 + float(seconds)
+                                lyrics_data.append((timestamp, lyrics_line))
+                            except ValueError:
+                                continue
+            return lyrics_data
+        except Exception as e:
+            print('open lrc file error:', e)
+            return None
 
     def on_scrollbar_value_changed(self, value):
         self.user_scrolling = True
@@ -88,6 +91,8 @@ class PlayerPage(AppPage):
         self.update_image(imagePath)
 
         lyrics_data = self.parse_lrc(file_path)
+        if lyrics_data is None:
+            return
         self.lyrics = [line[1] for line in lyrics_data]
         self.timeline = [line[0] for line in lyrics_data]
         for lyrics_line in self.lyrics:
