@@ -8,8 +8,6 @@ from components.AppScrollBox import AppScrollBox
 from PySide2.QtCore import QRectF, QTimer, Qt
 from Core import appManager
 
-import os
-
 class PlayerPage(AppPage):
 
     def __init__(self, appWindow, parent: Union[QFrame, QLayout] = None):
@@ -17,7 +15,7 @@ class PlayerPage(AppPage):
 
         self.pageLayoutWidget = QWidget()
         self.pageLayout = QHBoxLayout(self.pageLayoutWidget)
-        self.pageLayoutWidget.setMinimumHeight(appWindow.APP_PAGE_DEFAULT_SIZE[1])
+        self.pageLayoutWidget.setMinimumHeight(appWindow.APP_PAGE_DEFAULT_SIZE[1]-320)
         self.addComponent(self.pageLayoutWidget)
         self.labels = []
         self.switchingIn = False

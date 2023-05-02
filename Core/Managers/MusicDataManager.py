@@ -245,7 +245,8 @@ class MusicDataManager(Manager):
 
     _musicTable: Table = None
     _musicListTable: Table = None
-    _onMusicAdded: List[Callable[[Music], any]] = []
+    _onMusicAdded: List[Callable[[Music], any]] = [] # invoke(music)
+    _onMusicDeleted: List[Callable[[str], any]] = [] # invoke(musicHash)
 
     def __init__(self):
         localDataManager.database.create_table(
@@ -303,6 +304,10 @@ class MusicDataManager(Manager):
         self._onMusicAdded.append(callback)
     def removeOnMusicAddedCallback(self, callback: Callable[['Music'], any]):
         self._onMusicAdded.remove(callback)
+    def addOnMusicDeletedCallback(self, callback: Callable[[str], any]):
+        self._onMusicDeleted.append(callback)
+    def removeOnMusicDeletedCallback(self, callback: Callable[[str], any]):
+        self._onMusicDeleted.remove(callback)
     # endregion
 
     def getMusic(self, id:int)-> Union[None, 'Music']:
@@ -386,6 +391,8 @@ class MusicDataManager(Manager):
         _music = _allMusics.pop(_musicID)
         for callback in tuple(_music._onDeletedCallbacks):
             callback(_music)
+        for callback in self._onMusicDeleted:
+            callback(_music.fileHash)
         print(f'deleted music {_music.title}')
         del _music
     def deleteLyric(self, music:Union[int, 'Music']):

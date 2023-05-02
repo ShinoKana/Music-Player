@@ -22,7 +22,19 @@ class NetworkManager(socketio.AsyncClient, Manager):
 
     def __init__(self):
         super().__init__()
+
+        #register events
+        self.on('direct_connect', self.direct_connect)
+        self.on('udpHolePunch_repeat', self.udpHolePunch_repeat)
+        self.on('udpHolePunch_once', self.udpHolePunch_once)
+        self.on('TURN_connect', self.TURN_connect)
+        self.on('TURN_disconnect', self.TURN_disconnect)
+        musicDataManager.addOnMusicAddedCallback(self.onUploadSong)
+        musicDataManager.addOnMusicDeletedCallback(self.onDeleteSong)
+
+        #pool for threadings
         self._threadPool = QThreadPool()
+
         async def connect_to_server():
             print('connecting to server...')
             print('getting network info...')
@@ -51,7 +63,6 @@ class NetworkManager(socketio.AsyncClient, Manager):
             except Exception as e:
                 print('connect to server failed, error:', e)
                 return False
-
         appManager.goLoading(AutoTranslateWord('connecting to server...'))
         def onConnectionDone(result):
             appManager.stopLoading()
@@ -59,16 +70,16 @@ class NetworkManager(socketio.AsyncClient, Manager):
                 appManager.toast(AutoTranslateWord('connect to server success'))
             else:
                 appManager.toast(AutoTranslateWord('connect to server failed'))
-        self.create_async_thread(func = connect_to_server,
-                                 returnCallbacks = onConnectionDone)
+        self.create_async_thread(func = connect_to_server, returnCallbacks = onConnectionDone)
 
+    #song related
     def onUploadSong(self, newMusic:'Music'):
         data ={'hash': newMusic.hash, 'name': newMusic.name, 'artist': newMusic.artist,
                'fileExt': newMusic.fileExt, 'fileSize': str(newMusic.size)}
         asyncio.run(self.emit('uploadSong', data))
     def onDeleteSong(self, hash:str):
         asyncio.run(self.emit('deleteSong', {'hash': hash}))
-    async def findSong(self, keywords:str, mode:Literal['name', 'artist'])->Optional[List[str]]:
+    async def findSong(self, keywords:str, mode:Literal['name', 'artist','album'])->Optional[List[str]]:
         '''return a list of user id'''
         ret:List[str] = None
         def setReturnValue(x):
@@ -83,7 +94,21 @@ class NetworkManager(socketio.AsyncClient, Manager):
         if ret is None:
             print('findSong timeout')
         return ret
+
+    #node related
     def try_connect_to(self, userID:str):
+        self.emit('help_connect_to', {'targetID': userID})
+    def direct_connect(self, data):
+        ip = data['ip']
+        port = data['port']
+        return self.node.connect_to(ip, port)
+    def udpHolePunch_repeat(self, data):
+        pass
+    def udpHolePunch_once(self, data):
+        pass
+    def TURN_connect(self, data):
+        pass
+    def TURN_disconnect(self, data):
         pass
 
     @property
