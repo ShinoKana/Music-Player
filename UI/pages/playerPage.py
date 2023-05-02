@@ -1,7 +1,8 @@
 from Core.DataType import AutoTranslateWord
 from .AppPage import AppPage
 from typing import Union
-from PySide2.QtWidgets import QFrame, QLayout, QLabel, QVBoxLayout, QHBoxLayout, QGraphicsPixmapItem, QGraphicsScene, QGraphicsView, QGraphicsScene, QGraphicsPathItem
+from PySide2.QtWidgets import (QFrame, QLayout, QLabel, QVBoxLayout, QHBoxLayout, QGraphicsPixmapItem, QGraphicsScene,
+                               QGraphicsView, QGraphicsScene, QGraphicsPathItem, QWidget)
 from PySide2.QtGui import QPixmap, QPainterPath, QBrush, QPainter
 from components.AppScrollBox import AppScrollBox
 from PySide2.QtCore import QRectF, QTimer, Qt
@@ -13,8 +14,11 @@ class PlayerPage(AppPage):
 
     def __init__(self, appWindow, parent: Union[QFrame, QLayout] = None):
         super().__init__(appWindow=appWindow, parent=parent, titleText=AutoTranslateWord("Play"))
-        self.pageLayout = QHBoxLayout()
-        self.setLayout(self.pageLayout)
+
+        self.pageLayoutWidget = QWidget()
+        self.pageLayout = QHBoxLayout(self.pageLayoutWidget)
+        self.pageLayoutWidget.setMinimumHeight(appWindow.APP_PAGE_DEFAULT_SIZE[1])
+        self.addComponent(self.pageLayoutWidget)
         self.labels = []
         self.switchingIn = False
         self.isDark = appManager.config.isDarkTheme()

@@ -187,6 +187,7 @@ class AppWindow(FramelessWindow):
         return self.__NavBarAndPageRatio
     @property
     def APP_PAGE_DEFAULT_SIZE(self)->tuple:
+        '''(width, height)'''
         return (int(self.DEFALUT_WINDOW_SIZE[0] * (1 - self.NavBarAndPageRatio)), self.DEFALUT_WINDOW_SIZE[1])
     @property
     def NavBar_DEFAULT_SIZE(self)->tuple:

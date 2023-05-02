@@ -1,7 +1,8 @@
+import json
 from Core import appManager, musicDataManager, MusicList, SingleEnum, AutoTranslateWord
 import socketio, socket, requests, netifaces, stun, asyncio, pythonp2p
 from PySide2.QtCore import QRunnable, Signal, QObject, QThreadPool
-from typing import Optional, Callable, Iterable, Union
+from typing import Optional, Callable, Iterable, Union, Literal, List, Dict, Tuple
 from .Manager import *
 
 _SERVER_URL = 'http://localhost:9192'
@@ -61,6 +62,30 @@ class NetworkManager(socketio.AsyncClient, Manager):
         self.create_async_thread(func = connect_to_server,
                                  returnCallbacks = onConnectionDone)
 
+    def onUploadSong(self, newMusic:'Music'):
+        data ={'hash': newMusic.hash, 'name': newMusic.name, 'artist': newMusic.artist,
+               'fileExt': newMusic.fileExt, 'fileSize': str(newMusic.size)}
+        asyncio.run(self.emit('uploadSong', data))
+    def onDeleteSong(self, hash:str):
+        asyncio.run(self.emit('deleteSong', {'hash': hash}))
+    async def findSong(self, keywords:str, mode:Literal['name', 'artist'])->Optional[List[str]]:
+        '''return a list of user id'''
+        ret:List[str] = None
+        def setReturnValue(x):
+            nonlocal ret
+            ret = json.loads(x)
+        await self.emit('findSong', {'keywords': keywords, 'mode': mode})
+        async def waitReturnValue():
+            nonlocal ret
+            while ret is None:
+                await asyncio.sleep(0.5)
+        await asyncio.wait_for(waitReturnValue(), 8)
+        if ret is None:
+            print('findSong timeout')
+        return ret
+    def try_connect_to(self, userID:str):
+        pass
+
     @property
     def sessionID(self):
         return self.get_sid()
@@ -109,7 +134,9 @@ class NetworkManager(socketio.AsyncClient, Manager):
         return None
 
     def create_thread(self,
-                      func:Callable[[], object],
+                      func:Callable,
+                      args:Optional[Tuple]=None,
+                      kwargs:Optional[Dict]=None,
                       returnCallbacks:Optional[Union[Iterable[Callable[[object], None]],Callable[[object], None]]]=None,
                       errorCallbacks:Optional[Union[Iterable[Callable[[Exception], None]],Callable[[Exception], None]]]=None,
                       start:bool=True):
@@ -135,7 +162,14 @@ class NetworkManager(socketio.AsyncClient, Manager):
                         self.signals.error.connect(errorCallbacks)
             def run(self):
                 try:
-                    result = func()
+                    if args is None and kwargs is None:
+                        result = func()
+                    elif args is None:
+                        result = func(**kwargs)
+                    elif kwargs is None:
+                        result = func(*args)
+                    else:
+                        result = func(*args, **kwargs)
                     self.signals.finished.emit(result)
                 except Exception as e:
                     self.signals.error.emit(e)
@@ -146,7 +180,9 @@ class NetworkManager(socketio.AsyncClient, Manager):
         else:
             return Worker()
     def create_async_thread(self,
-                            func:Callable[[], object],
+                            func:Callable,
+                            args: Optional[Tuple] = None,
+                            kwargs: Optional[Dict] = None,
                             returnCallbacks:Optional[Union[Iterable[Callable[[object], None]],Callable[[object], None]]]=None,
                             errorCallbacks:Optional[Union[Iterable[Callable[[Exception], None]],Callable[[Exception], None]]]=None,
                             start:bool=True):
@@ -171,7 +207,14 @@ class NetworkManager(socketio.AsyncClient, Manager):
                         self.signals.error.connect(errorCallbacks)
             def run(self):
                 try:
-                    result = asyncio.run(func())
+                    if args is None and kwargs is None:
+                        result = asyncio.run(func())
+                    elif args is None:
+                        result = asyncio.run(func(**kwargs))
+                    elif kwargs is None:
+                        result = asyncio.run(func(*args))
+                    else:
+                        result = asyncio.run(func(*args, **kwargs))
                     self.signals.finished.emit(result)
                 except Exception as e:
                     self.signals.error.emit(e)
