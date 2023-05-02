@@ -185,7 +185,7 @@ class PlayerPage(AppPage):
                     label.setStyleSheet("color: white;")
                     label.setFixedHeight(30)
                     if i == current_lyrics_index:
-                        label.setStyleSheet("font-weight: bold; color: red;")
+                        label.setStyleSheet("font-weight: bold; color: #D8B4FF;")
 
                 if current_lyrics_index != self.last_lyrics_index:
                     self.last_lyrics_index = current_lyrics_index
