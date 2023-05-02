@@ -1,14 +1,14 @@
 from Core.DataType import AutoTranslateWord, AutoTranslateWordList
 from .AppPage import AppPage
 from typing import Union, List, Optional, Literal
-from Core import appManager, networkManager
+from Core import appManager, networkManager, musicDataManager, musicPlayerManager
 from PySide2.QtWidgets import QFrame, QLayout, QWidget, QHBoxLayout, QVBoxLayout
 from PySide2.QtCore import Qt
 from PySide2.QtGui import QColor, QWheelEvent
 from components import AppSearchBar_WithDropDown, AppScrollBox, AppTextLabel, AppLayoutBox
 from ExternalPackage.pyqt5Custom import Spinner
 import json
-from functools import reduce
+from functools import reduce, partial
 
 class HomePage(AppPage):
     def __init__(self, appWindow, parent: Union[QFrame, QLayout] = None):
@@ -57,6 +57,40 @@ class HomePage(AppPage):
         self.recentHitSongListBox = AppScrollBox(height=200, titleText=AutoTranslateWord("Recent Hit Song"))
         self.rightPanelLayout.addWidget(self.recentHitSongListBox)
         #endregion
+
+        current_playlist = musicPlayerManager.currentMusicList
+        if current_playlist is not None:
+            for music_id in current_playlist.musicIDs:
+                music = musicDataManager.getMusic(music_id)
+                self.addSongItemToCurrentPlaylist(music, self.currentPlayListBox)
+
+    # add song item to current play list
+    def addSongItemToCurrentPlaylist(self, song, playlist):
+        itemBox = AppLayoutBox(height=30, align='left', fontBold=True)
+        song_title = song._title
+        artist = song._artist or song._albumArtist or AutoTranslateWord('Unknown')
+        itemBox.addText(song_title, stretch=1)
+        itemBox.addText(artist, stretch=0)
+
+        # 添加点击事件以播放歌曲
+        itemBox.addOnLeftClickCallback(partial(self.play_music_by_id, song.id, itemBox))
+
+        playlist.addComponent(itemBox)
+
+    def play_music_by_id(self, musicID: int, itemBox: AppLayoutBox):
+        music = musicDataManager.getMusic(musicID)
+        lst = musicDataManager.getMusicList(-1)  # -1表示“所有歌曲”列表
+        if musicPlayerManager.currentMusic is not None:
+            if musicPlayerManager.currentMusic.id == musicID:
+                musicPlayerManager.pause() if musicPlayerManager.isPlaying() else musicPlayerManager.play()
+                return
+        if musicPlayerManager.currentMusicList.id != -1:
+            musicPlayerManager.setPlaylist(lst)
+        lst.setCurrentIndex(lst._musicIDs.index(musicID))
+        musicPlayerManager.stop()
+        musicPlayerManager.setPosition(0)
+        musicPlayerManager.play()
+
 
     #region methods for search song
     def _searchSongResourse(self, keywords:str, mode):
