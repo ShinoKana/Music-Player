@@ -91,7 +91,6 @@ class HomePage(AppPage):
         musicPlayerManager.setPosition(0)
         musicPlayerManager.play()
 
-
     #region methods for search song
     def _searchSongResourse(self, keywords:str, mode):
         if not networkManager.serverConnected:
@@ -163,10 +162,10 @@ class HomePage(AppPage):
         self.searchBar.searchButton.setEnabled(False)
         self.searchBar.inputArea.setEnabled(False)
         self.searchBar.dropDown.setEnabled(False)
-        for component in self.songResourcesBox.components:
-            component.setEnabled(False)
-            if hasattr('components', component):
-                for subComponent in component.components:
+        for _component in self.songResourcesBox.components:
+            _component.setEnabled(False)
+            if hasattr(_component, 'components'):
+                for subComponent in _component.components:
                     subComponent.setEnabled(False)
     def _unlockSearch(self):
         self.searchSpinner.hide()
