@@ -145,6 +145,8 @@ class AppMusicBox(AppWidget(QWidget)):
             sec = int(position / 1000)
             self.progressSlider.setValue(sec)
             #########################################################################################
+            if self.mediaPlayer.currentMusic is None:
+                return
             if hasattr(self.mediaPlayer, 'currentMusic'):
                 title = self.mediaPlayer.currentMusic.title or AutoTranslateWord('Unknown')
                 cover_path = self.mediaPlayer.currentMusic.coverPath or AutoTranslateWord('Unknown')

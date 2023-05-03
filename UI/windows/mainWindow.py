@@ -73,6 +73,19 @@ class MainWindow(AppWindow):
             appManager.mainWindow = self
         self.openAni_opacity.finished.connect(setMainWindow)
 
+    def paintEvent(self, e) -> None:
+        super().paintEvent(e)
+        if appManager.mainWindow == self:
+            if len(appManager._toastMessages)>0:
+                args = appManager._toastMessages.pop(0)
+                self.toast(*args)
+            if len(appManager._loadingMessages) > 0:
+                args = appManager._loadingMessages.pop(0)
+                self.goloading(*args)
+            if appManager._stopLoading:
+                self.stoploading()
+                appManager._stopLoading = False
+
     def allowMultiplePageInstances(cls):
         return False
     def hideOrShowMainWindow(self):

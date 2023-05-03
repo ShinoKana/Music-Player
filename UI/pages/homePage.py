@@ -1,7 +1,7 @@
 from Core.DataType import AutoTranslateWord, AutoTranslateWordList
 from .AppPage import AppPage
 from typing import Union, List, Optional, Literal
-from Core import appManager, networkManager, musicDataManager, musicPlayerManager
+from Core import appManager, networkManager, musicDataManager, musicPlayerManager, localDataManager
 from PySide2.QtWidgets import QFrame, QLayout, QWidget, QHBoxLayout, QVBoxLayout
 from PySide2.QtCore import Qt
 from PySide2.QtGui import QColor, QWheelEvent
@@ -94,7 +94,11 @@ class HomePage(AppPage):
 
     #region methods for search song
     def _searchSongResourse(self, keywords:str, mode):
+        if not networkManager.serverConnected:
+            appManager.toast(AutoTranslateWord('server not connected'))
+            return
         if keywords is None or keywords == "" or keywords.replace(" ", "") == "":
+            appManager.toast(AutoTranslateWord('please enter keywords'))
             return
         self._lockSearch()
         _mode = mode.lower()
@@ -107,13 +111,22 @@ class HomePage(AppPage):
         keywordList = keywords.split(" ")
         def onSearchFinishCallback(data):
             self._unlockSearch()
+
             if data is None or len(data) == 0:
                 print('no song with keyword: ', keywords, ' and mode: ', mode, ' found')
                 appManager.toast(keywords+":"+ AutoTranslateWord('no finding result'))
+                self._unlockSearch()
                 return
+
+            print('search finished, result: ', data)
             self.songResourcesBox.removeAllComponents()
+            def downloadSong(hash):
+                if localDataManager.hasFile(hash):
+                    appManager.toast(AutoTranslateWord(f'song already downloaded'))
+                    return
+                # TODO: download song
             for song in data:
-                targetList = data['names'] if _mode == 'name' else data['artists'] if _mode == 'artist' else data['albums']
+                targetList = song['names'] if _mode == 'name' else song['artists'] if _mode == 'artist' else song['albums']
                 targetList = json.loads(targetList)
                 targetIndex = None
                 for i, s in enumerate(targetList):
@@ -121,19 +134,28 @@ class HomePage(AppPage):
                         targetIndex = i
                         break
                 if targetIndex is None:
-                    i=0
-                songName = json.loads(data['names'])[targetIndex]
-                songArtist = json.loads(data['artists'])[targetIndex]
-                songAlbum = json.loads(data['albums'])[targetIndex]
-                fileExt = data['fileExt']
-                fileSize = data['fileSize']
-                box = AppLayoutBox(contain=[songName, songArtist, songAlbum, fileExt, fileSize])
-                def downloadSong():
-                    pass
-                    #TODO: download song
-                box.addButton(text=AutoTranslateWord('download'), img=appManager.getUIImagePath('down_arrow.png'),command=downloadSong)
+                    targetIndex = 0
+                songName = json.loads(song['names'])[targetIndex] if song['names'] != "" and song['names'] is not None else AutoTranslateWord('Unknown')
+                if len(songName) > 30:
+                    songName = songName[:27] + '...'
+                songArtist = json.loads(song['artists'])[targetIndex] if song['artists'] != "" and song['artists'] is not None else AutoTranslateWord('Unknown')
+                if len(songArtist) > 13:
+                    songArtist = songArtist[:10] + '...'
+                songAlbum = json.loads(song['albums'])[targetIndex] if song['albums'] != "" and song['albums'] is not None else AutoTranslateWord('Unknown')
+                if len(songAlbum) > 13:
+                    songAlbum = songAlbum[:10] + '...'
+                fileExt = song['fileExt'] if song['fileExt'] != "" and song['fileExt'] is not None else AutoTranslateWord('Unknown')
+                fileSize = song['fileSize'] if song['fileSize'] != "" and song['fileSize'] is not None else AutoTranslateWord('Unknown')
+                box = AppLayoutBox(parent=self.songResourcesBox)
+                box.addText(songName, stretch=1)
+                box.addText(songArtist, stretch=0)
+                box.addText(songAlbum, stretch=0)
+                box.addButton(text=AutoTranslateWord('download'), img=appManager.getUIImagePath('down_arrow.png'),command=partial(downloadSong, song['hash']))
+                box.adjustSize()
                 self.songResourcesBox.addComponent(box)
-        networkManager.create_async_thread(target=networkManager.findSong, args=(keywords, _mode),
+
+            self._unlockSearch()
+        networkManager.create_async_thread(func=networkManager.findSong, args=(keywords, _mode),
                                            returnCallbacks=onSearchFinishCallback)
     def _lockSearch(self):
         self.searchSpinner.show()
@@ -154,7 +176,7 @@ class HomePage(AppPage):
         self.searchBar.dropDown.setEnabled(True)
         for component in self.songResourcesBox.components:
             component.setEnabled(True)
-            if hasattr('components', component):
+            if hasattr(component,'components'):
                 for subComponent in component.components:
                     subComponent.setEnabled(True)
     #endregion

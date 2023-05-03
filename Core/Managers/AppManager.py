@@ -320,8 +320,9 @@ class AppManager(Manager):
     _record:RecordManager = None
     _mainWindow: 'AppWindow' = None
 
-    _toastsBeforeStart = []
-    _loadingMessagesBeforeStart = []
+    _toastMessages = []
+    _loadingMessages = []
+    _stopLoading = False
 
     def __init__(self):
         self._config = ConfigManager()
@@ -329,21 +330,13 @@ class AppManager(Manager):
 
     def toast(self, title: str = "", content: str = "", duration: float = 4.5, icon: Union[str, 'QIcon', 'QPixmap'] = None):
         '''show a toast'''
-        if self.mainWindow is None:
-            self._toastsBeforeStart.append((title, content, duration, icon))
-            return
-        self.mainWindow.toast(title, content, duration, icon)
+        self._toastMessages.append((title, content, duration, icon))
     def goLoading(self, text=None, closable=True):
         '''show loading page'''
-        if self.mainWindow is None:
-            self._loadingMessagesBeforeStart.append((text, closable))
-            return
-        self.mainWindow.goloading(text, closable)
+        self._loadingMessages.append((text, closable))
     def stopLoading(self):
         '''stop loading page'''
-        if self.mainWindow is None:
-            return
-        self.mainWindow.stoploading()
+        self._stopLoading = True
 
     @property
     def mainWindow(self)->'AppWindow':
@@ -351,12 +344,7 @@ class AppManager(Manager):
     @mainWindow.setter
     def mainWindow(self, value: 'AppWindow'):
         self._mainWindow = value
-        for title, content, duration, icon in self._toastsBeforeStart:
-            self.toast(title, content, duration, icon)
-        self._toastsBeforeStart.clear()
-        for text, closable in self._loadingMessagesBeforeStart:
-            self.goLoading(text, closable)
-        self._loadingMessagesBeforeStart.clear()
+
 
     @property
     def config(self)->ConfigManager:

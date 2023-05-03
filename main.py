@@ -8,20 +8,30 @@ def runNode(queue: multiprocessing.Queue):
         import pythonp2p
     import threading, time
     class Node(pythonp2p.Node):
-        def __init__(self, *args, queue: multiprocessing.Queue = None, **kwargs):
+
+        #events
+        on_connected = []
+        on_disconnected = []
+        on_message_received = []
+
+        def __init__(self, *args, inQueue: multiprocessing.Queue = None, outQueue: multiprocessing.Queue = None, **kwargs):
             super().__init__()
-            self.queue = queue
-            queue.put(self.port)
+            self.inQueue = inQueue
+            self.outQueue = outQueue
+            outQueue.put(self.port)
             self.stop_UDP_send_repeat = False
 
             def get_command_from_queue():
-                if self.queue is not None:
+                if self.inQueue is not None:
                     while True:
-                        command = self.queue.get()
+                        command = self.inQueue.get()
                         funcName, args, kwargs = command
+                        needOutput = kwargs.pop('needOutput', False)
                         print('received command:', funcName, 'args:', args, 'kwargs:', kwargs)
                         try:
-                            getattr(self, funcName)(*args, **kwargs)
+                            ret = getattr(self, funcName)(*args, **kwargs)
+                            if self.outQueue is not None and needOutput:
+                                self.outQueue.put(ret)
                         except Exception as e:
                             print('Error when executing command:', e)
 
@@ -42,6 +52,31 @@ def runNode(queue: multiprocessing.Queue):
             threading.Thread(target=_send, daemon=True).start()
         def stop_udp_send_repeatly(self):
             self.stop_UDP_send_repeat = True
+        def on_message(self, data, senderID, private):
+            super().on_message(data, senderID, private)
+            for func in tuple(self.on_message_received):
+                func(data, senderID, private)
+        def node_connected(self, nodeID):
+            super().node_connected(nodeID)
+            for func in tuple(self.on_connected):
+                func(nodeID)
+        def node_disconnected(self, nodeID):
+            super().node_disconnected(nodeID)
+            for func in tuple(self.on_disconnected):
+                func(nodeID)
+        def add_on_connected_listener(self, func):
+            self.on_connected.append(func) if func not in self.on_connected else None
+        def add_on_disconnected_listener(self, func):
+            self.on_disconnected.append(func) if func not in self.on_disconnected else None
+        def add_on_message_received_listener(self, func):
+            self.on_message_received.append(func) if func not in self.on_message_received else None
+        def remove_on_connected_listener(self, func):
+            self.on_connected.remove(func) if func in self.on_connected else None
+        def remove_on_disconnected_listener(self, func):
+            self.on_disconnected.remove(func) if func in self.on_disconnected else None
+        def remove_on_message_received_listener(self, func):
+            self.on_message_received.remove(func) if func in self.on_message_received else None
+
     node = Node(queue=queue)
     node.start()
 
